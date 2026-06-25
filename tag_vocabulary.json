@@ -1,0 +1,68 @@
+{
+  "dimension_tags": [
+    "2d",
+    "3d",
+    "surface",
+    "volume",
+    "unsteady",
+    "time_dependent",
+    "curvilinear_grid",
+    "unstructured_grid"
+  ],
+  "feature_tags": [
+    "critical_points",
+    "saddles",
+    "sources_sinks",
+    "vortices",
+    "vortex_cores",
+    "high_entropy_regions",
+    "salient_features",
+    "flow_topology",
+    "boundaries",
+    "blank_regions",
+    "occlusion_regions"
+  ],
+  "method_tags": [
+    "evenly_spaced",
+    "feature_guided",
+    "topology_guided",
+    "entropy_based",
+    "image_guided",
+    "view_dependent",
+    "template_based",
+    "poisson_disk",
+    "farthest_point",
+    "clustering",
+    "similarity_based",
+    "optimization_based",
+    "interactive",
+    "hierarchical",
+    "multiresolution"
+  ],
+  "task_tags": [
+    "reduce_clutter",
+    "preserve_salient_features",
+    "cover_domain",
+    "highlight_features",
+    "compare_flows",
+    "improve_perception",
+    "reduce_occlusion",
+    "maintain_temporal_coherence",
+    "support_exploration",
+    "generate_representative_streamlines"
+  ],
+  "input_tags": [
+    "vector_field",
+    "scalar_field",
+    "entropy_field",
+    "critical_point_locations",
+    "critical_point_types",
+    "topology_graph",
+    "user_seed",
+    "viewpoint",
+    "image_space",
+    "density_control",
+    "distance_threshold",
+    "feature_detector"
+  ]
+}

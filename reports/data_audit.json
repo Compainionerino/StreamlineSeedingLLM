@@ -1,0 +1,484 @@
+{
+  "data_path": "C:\\Masterarbeit\\RAG\\tagged_applications.jsonl",
+  "data_sha256": "6a2f49265696cd3c5dad8c2559531985cc007d374235137b2ae5d443d11d1e1b",
+  "summary": {
+    "record_count": 122,
+    "unique_application_id_count": 122,
+    "unique_paper_id_count": 73,
+    "source_output_file_count": 73,
+    "source_pdf_filename_count": 73,
+    "duplicate_application_id_count": 0
+  },
+  "schema": {
+    "required_fields": [
+      "paper_id",
+      "application_id",
+      "paper_title",
+      "method_role",
+      "algorithm_name",
+      "algorithm_type",
+      "application_goal",
+      "application_context",
+      "target_feature",
+      "data_dimension",
+      "seed_placement_strategy",
+      "seed_input_information",
+      "seed_density_or_number",
+      "seed_spacing_or_filtering",
+      "streamline_length_control",
+      "integration_direction",
+      "stopping_criteria",
+      "parameters_reported",
+      "reported_result",
+      "limitations_or_notes",
+      "evidence",
+      "dimension_tags",
+      "feature_tags",
+      "method_tags",
+      "task_tags",
+      "input_tags"
+    ],
+    "missing_required_by_field": {},
+    "wrong_list_shape_by_field": {},
+    "invalid_tag_value_by_field": {}
+  },
+  "tags": {
+    "tag_fields": [
+      "dimension_tags",
+      "feature_tags",
+      "method_tags",
+      "task_tags",
+      "input_tags"
+    ],
+    "tag_counts": {
+      "dimension_tags": [
+        {
+          "tag": "3d",
+          "count": 83
+        },
+        {
+          "tag": "2d",
+          "count": 64
+        },
+        {
+          "tag": "volume",
+          "count": 34
+        },
+        {
+          "tag": "time_dependent",
+          "count": 21
+        },
+        {
+          "tag": "unsteady",
+          "count": 21
+        },
+        {
+          "tag": "surface",
+          "count": 20
+        },
+        {
+          "tag": "unstructured_grid",
+          "count": 4
+        },
+        {
+          "tag": "curvilinear_grid",
+          "count": 2
+        }
+      ],
+      "feature_tags": [
+        {
+          "tag": "salient_features",
+          "count": 55
+        },
+        {
+          "tag": "critical_points",
+          "count": 25
+        },
+        {
+          "tag": "occlusion_regions",
+          "count": 24
+        },
+        {
+          "tag": "flow_topology",
+          "count": 22
+        },
+        {
+          "tag": "vortices",
+          "count": 22
+        },
+        {
+          "tag": "boundaries",
+          "count": 14
+        },
+        {
+          "tag": "high_entropy_regions",
+          "count": 13
+        },
+        {
+          "tag": "saddles",
+          "count": 10
+        },
+        {
+          "tag": "sources_sinks",
+          "count": 9
+        },
+        {
+          "tag": "blank_regions",
+          "count": 5
+        },
+        {
+          "tag": "vortex_cores",
+          "count": 5
+        }
+      ],
+      "method_tags": [
+        {
+          "tag": "optimization_based",
+          "count": 21
+        },
+        {
+          "tag": "evenly_spaced",
+          "count": 20
+        },
+        {
+          "tag": "interactive",
+          "count": 18
+        },
+        {
+          "tag": "entropy_based",
+          "count": 12
+        },
+        {
+          "tag": "image_guided",
+          "count": 12
+        },
+        {
+          "tag": "hierarchical",
+          "count": 11
+        },
+        {
+          "tag": "similarity_based",
+          "count": 11
+        },
+        {
+          "tag": "feature_guided",
+          "count": 10
+        },
+        {
+          "tag": "multiresolution",
+          "count": 10
+        },
+        {
+          "tag": "topology_guided",
+          "count": 9
+        },
+        {
+          "tag": "view_dependent",
+          "count": 9
+        },
+        {
+          "tag": "farthest_point",
+          "count": 8
+        },
+        {
+          "tag": "clustering",
+          "count": 7
+        },
+        {
+          "tag": "poisson_disk",
+          "count": 7
+        },
+        {
+          "tag": "template_based",
+          "count": 6
+        }
+      ],
+      "task_tags": [
+        {
+          "tag": "reduce_clutter",
+          "count": 53
+        },
+        {
+          "tag": "highlight_features",
+          "count": 52
+        },
+        {
+          "tag": "preserve_salient_features",
+          "count": 45
+        },
+        {
+          "tag": "support_exploration",
+          "count": 45
+        },
+        {
+          "tag": "cover_domain",
+          "count": 41
+        },
+        {
+          "tag": "generate_representative_streamlines",
+          "count": 35
+        },
+        {
+          "tag": "maintain_temporal_coherence",
+          "count": 25
+        },
+        {
+          "tag": "reduce_occlusion",
+          "count": 23
+        },
+        {
+          "tag": "compare_flows",
+          "count": 15
+        },
+        {
+          "tag": "improve_perception",
+          "count": 8
+        }
+      ],
+      "input_tags": [
+        {
+          "tag": "density_control",
+          "count": 89
+        },
+        {
+          "tag": "distance_threshold",
+          "count": 45
+        },
+        {
+          "tag": "vector_field",
+          "count": 42
+        },
+        {
+          "tag": "critical_point_types",
+          "count": 27
+        },
+        {
+          "tag": "user_seed",
+          "count": 22
+        },
+        {
+          "tag": "image_space",
+          "count": 21
+        },
+        {
+          "tag": "scalar_field",
+          "count": 16
+        },
+        {
+          "tag": "feature_detector",
+          "count": 15
+        },
+        {
+          "tag": "critical_point_locations",
+          "count": 13
+        },
+        {
+          "tag": "entropy_field",
+          "count": 13
+        },
+        {
+          "tag": "topology_graph",
+          "count": 9
+        },
+        {
+          "tag": "viewpoint",
+          "count": 7
+        }
+      ]
+    },
+    "records_with_tags_by_field": {
+      "dimension_tags": 122,
+      "feature_tags": 93,
+      "input_tags": 114,
+      "method_tags": 95,
+      "task_tags": 113
+    },
+    "empty_tag_field_counts": {
+      "feature_tags": 29,
+      "input_tags": 8,
+      "method_tags": 27,
+      "task_tags": 9
+    },
+    "missing_tag_field_counts": {}
+  },
+  "method_roles": [
+    {
+      "value": "proposed_method",
+      "count": 91
+    },
+    {
+      "value": "proposed_variant",
+      "count": 27
+    },
+    {
+      "value": "actionable_parameter_study",
+      "count": 4
+    }
+  ],
+  "vocabulary": {
+    "mode": "loaded",
+    "path": "tag_vocabulary.json",
+    "vocabulary": {
+      "dimension_tags": [
+        "2d",
+        "3d",
+        "surface",
+        "volume",
+        "unsteady",
+        "time_dependent",
+        "curvilinear_grid",
+        "unstructured_grid"
+      ],
+      "feature_tags": [
+        "critical_points",
+        "saddles",
+        "sources_sinks",
+        "vortices",
+        "vortex_cores",
+        "high_entropy_regions",
+        "salient_features",
+        "flow_topology",
+        "boundaries",
+        "blank_regions",
+        "occlusion_regions"
+      ],
+      "method_tags": [
+        "evenly_spaced",
+        "feature_guided",
+        "topology_guided",
+        "entropy_based",
+        "image_guided",
+        "view_dependent",
+        "template_based",
+        "poisson_disk",
+        "farthest_point",
+        "clustering",
+        "similarity_based",
+        "optimization_based",
+        "interactive",
+        "hierarchical",
+        "multiresolution"
+      ],
+      "task_tags": [
+        "reduce_clutter",
+        "preserve_salient_features",
+        "cover_domain",
+        "highlight_features",
+        "compare_flows",
+        "improve_perception",
+        "reduce_occlusion",
+        "maintain_temporal_coherence",
+        "support_exploration",
+        "generate_representative_streamlines"
+      ],
+      "input_tags": [
+        "vector_field",
+        "scalar_field",
+        "entropy_field",
+        "critical_point_locations",
+        "critical_point_types",
+        "topology_graph",
+        "user_seed",
+        "viewpoint",
+        "image_space",
+        "density_control",
+        "distance_threshold",
+        "feature_detector"
+      ]
+    },
+    "derived_vocabulary": {
+      "dimension_tags": [
+        "2d",
+        "3d",
+        "curvilinear_grid",
+        "surface",
+        "time_dependent",
+        "unsteady",
+        "unstructured_grid",
+        "volume"
+      ],
+      "feature_tags": [
+        "blank_regions",
+        "boundaries",
+        "critical_points",
+        "flow_topology",
+        "high_entropy_regions",
+        "occlusion_regions",
+        "saddles",
+        "salient_features",
+        "sources_sinks",
+        "vortex_cores",
+        "vortices"
+      ],
+      "method_tags": [
+        "clustering",
+        "entropy_based",
+        "evenly_spaced",
+        "farthest_point",
+        "feature_guided",
+        "hierarchical",
+        "image_guided",
+        "interactive",
+        "multiresolution",
+        "optimization_based",
+        "poisson_disk",
+        "similarity_based",
+        "template_based",
+        "topology_guided",
+        "view_dependent"
+      ],
+      "task_tags": [
+        "compare_flows",
+        "cover_domain",
+        "generate_representative_streamlines",
+        "highlight_features",
+        "improve_perception",
+        "maintain_temporal_coherence",
+        "preserve_salient_features",
+        "reduce_clutter",
+        "reduce_occlusion",
+        "support_exploration"
+      ],
+      "input_tags": [
+        "critical_point_locations",
+        "critical_point_types",
+        "density_control",
+        "distance_threshold",
+        "entropy_field",
+        "feature_detector",
+        "image_space",
+        "scalar_field",
+        "topology_graph",
+        "user_seed",
+        "vector_field",
+        "viewpoint"
+      ]
+    },
+    "unknown_tags_by_field": {
+      "dimension_tags": [],
+      "feature_tags": [],
+      "method_tags": [],
+      "task_tags": [],
+      "input_tags": []
+    },
+    "unused_tags_by_field": {
+      "dimension_tags": [],
+      "feature_tags": [],
+      "method_tags": [],
+      "task_tags": [],
+      "input_tags": []
+    },
+    "error": null
+  },
+  "text_quality": {
+    "possible_mojibake_record_count": 0,
+    "possible_mojibake_examples": []
+  },
+  "issues": {
+    "summary": {
+      "by_code": {},
+      "by_severity": {}
+    },
+    "items": []
+  }
+}

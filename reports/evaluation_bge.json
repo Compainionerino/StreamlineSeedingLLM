@@ -1,0 +1,570 @@
+{
+  "query_count": 6,
+  "top_k": 10,
+  "hit_at_5": 1.0,
+  "hit_at_10": 1.0,
+  "results": [
+    {
+      "id": "2d_critical_points",
+      "query": "I need streamline seeds for a 2D vector field around critical points and saddles without too much clutter.",
+      "query_tags": {
+        "dimension_tags": [
+          "2d"
+        ],
+        "feature_tags": [
+          "critical_points",
+          "saddles"
+        ],
+        "method_tags": [],
+        "task_tags": [
+          "reduce_clutter"
+        ],
+        "input_tags": [
+          "vector_field"
+        ]
+      },
+      "expected_tags": {
+        "dimension_tags": [
+          "2d"
+        ],
+        "feature_tags": [
+          "critical_points",
+          "saddles"
+        ],
+        "task_tags": [
+          "reduce_clutter",
+          "highlight_features"
+        ],
+        "input_tags": [
+          "vector_field"
+        ]
+      },
+      "expected_application_ids": [
+        "a_streamline_placement_method_highlighting_flow_field_to_fba20a13_app_001",
+        "a_flow_guided_streamline_seeding_strategy_9cd29384_app_001",
+        "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001"
+      ],
+      "returned_application_ids": [
+        "hierarchical_streamline_bundles_56022d37_app_001",
+        "dualseeding_cbeab091_app_001",
+        "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001",
+        "topology_driven_streamline_seeding_for_2d_vector_field_v_278cb1a5_app_001",
+        "illustrative_streamline_placement_and_visualization_9abe8bc1_app_001",
+        "a_streamline_placement_method_highlighting_flow_field_to_fba20a13_app_001",
+        "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_002",
+        "topology_aware_evenly_spaced_streamline_placement_7091951c_app_001",
+        "multi_resolution_unsteady_flow_visualization_268b6ce5_app_001",
+        "2007_10_1109_tvcg_2007_70595_similarity_guided_streamlin_fe68dc0a_app_001"
+      ],
+      "hit_at_5": true,
+      "hit_at_10": true,
+      "hits": [
+        "a_streamline_placement_method_highlighting_flow_field_to_fba20a13_app_001",
+        "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001"
+      ],
+      "top_results": [
+        {
+          "rank": 1,
+          "score": 0.862366,
+          "application_id": "hierarchical_streamline_bundles_56022d37_app_001",
+          "paper_title": "Hierarchical Streamline Bundles",
+          "algorithm_name": "Saliency-guided seeding for hierarchical streamline bundles"
+        },
+        {
+          "rank": 2,
+          "score": 0.823312,
+          "application_id": "dualseeding_cbeab091_app_001",
+          "paper_title": "Dual Streamline Seeding - Method and Implementation",
+          "algorithm_name": "Dual Streamline Seeding"
+        },
+        {
+          "rank": 3,
+          "score": 0.82225,
+          "application_id": "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001",
+          "paper_title": "Dual Streamline Seeding",
+          "algorithm_name": "Dual Streamline Seeding"
+        },
+        {
+          "rank": 4,
+          "score": 0.818028,
+          "application_id": "topology_driven_streamline_seeding_for_2d_vector_field_v_278cb1a5_app_001",
+          "paper_title": "Topology-driven Streamline Seeding for 2D Vector Field Visualization",
+          "algorithm_name": "Topology-driven streamline seeding"
+        },
+        {
+          "rank": 5,
+          "score": 0.817549,
+          "application_id": "illustrative_streamline_placement_and_visualization_9abe8bc1_app_001",
+          "paper_title": "Illustrative Streamline Placement and Visualization",
+          "algorithm_name": "Illustrative streamline placement using local and global dissimilarity with distance fields"
+        }
+      ]
+    },
+    {
+      "id": "3d_vortices_low_clutter",
+      "query": "I have a 3D CFD flow field and want to seed streamlines around vortices without too much clutter.",
+      "query_tags": {
+        "dimension_tags": [
+          "3d",
+          "volume"
+        ],
+        "feature_tags": [
+          "vortices"
+        ],
+        "method_tags": [],
+        "task_tags": [
+          "reduce_clutter",
+          "generate_representative_streamlines"
+        ],
+        "input_tags": [
+          "vector_field"
+        ]
+      },
+      "expected_tags": {
+        "dimension_tags": [
+          "3d",
+          "volume"
+        ],
+        "feature_tags": [
+          "vortices"
+        ],
+        "task_tags": [
+          "reduce_clutter",
+          "highlight_features"
+        ],
+        "input_tags": [
+          "vector_field",
+          "density_control"
+        ]
+      },
+      "expected_application_ids": [
+        "2012_10_2312_localchapterevents_tpcg_tpcg12_053_060_adva_da4b84ca_app_001",
+        "a_stream_ribbon_seeding_strategy_4208c768_app_001",
+        "978_3_540_88606_8_7_942bcbeb_app_002"
+      ],
+      "returned_application_ids": [
+        "a_stream_ribbon_seeding_strategy_4208c768_app_001",
+        "2012_10_2312_localchapterevents_tpcg_tpcg12_053_060_adva_da4b84ca_app_001",
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_002",
+        "visualization_of_complex_unsteady_3d_flow_flowing_seed_p_710b5309_app_003",
+        "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001",
+        "feature_extraction_and_streamline_drawing_of_3d_time_var_c4b67c17_app_001",
+        "978_3_540_88606_8_7_942bcbeb_app_002",
+        "objective_lagrangian_vortex_cores_and_their_visual_repre_dc427f88_app_002",
+        "transfer_function_based_2d_3d_interactive_spatiotemporal_247a2346_app_002",
+        "visualization_of_complex_unsteady_3d_flow_flowing_seed_p_710b5309_app_001"
+      ],
+      "hit_at_5": true,
+      "hit_at_10": true,
+      "hits": [
+        "2012_10_2312_localchapterevents_tpcg_tpcg12_053_060_adva_da4b84ca_app_001",
+        "a_stream_ribbon_seeding_strategy_4208c768_app_001",
+        "978_3_540_88606_8_7_942bcbeb_app_002"
+      ],
+      "top_results": [
+        {
+          "rank": 1,
+          "score": 0.825147,
+          "application_id": "a_stream_ribbon_seeding_strategy_4208c768_app_001",
+          "paper_title": "A Stream Ribbon Seeding Strategy",
+          "algorithm_name": "Stream ribbon seeding strategy based on helicity magnitude"
+        },
+        {
+          "rank": 2,
+          "score": 0.817299,
+          "application_id": "2012_10_2312_localchapterevents_tpcg_tpcg12_053_060_adva_da4b84ca_app_001",
+          "paper_title": "Advanced, Automatic Stream Surface Seeding and Filtering",
+          "algorithm_name": "Automatic Stream Surface Seeding and Filtering"
+        },
+        {
+          "rank": 3,
+          "score": 0.780998,
+          "application_id": "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_002",
+          "paper_title": "Screen-space Streamline Seeding Method for Visualizing Unsteady Flow in Augmented Reality",
+          "algorithm_name": "Screen-space streamline seeding method with degree-of-interest weighting"
+        },
+        {
+          "rank": 4,
+          "score": 0.780435,
+          "application_id": "visualization_of_complex_unsteady_3d_flow_flowing_seed_p_710b5309_app_003",
+          "paper_title": "Visualization of Complex Unsteady 3D Flow: Flowing Seed Points and Dynamically Evolving Seed Curves with Applications to Vortex Visualization in CFD Simulations of Ultra Low Reynolds Number Insect Flight",
+          "algorithm_name": "dynamic seed curves using vertex normal seeds"
+        },
+        {
+          "rank": 5,
+          "score": 0.752443,
+          "application_id": "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001",
+          "paper_title": "Dual Streamline Seeding",
+          "algorithm_name": "Dual Streamline Seeding"
+        }
+      ]
+    },
+    {
+      "id": "surface_flow",
+      "query": "Find seeding approaches for evenly spaced streamlines on a triangulated surface mesh.",
+      "query_tags": {
+        "dimension_tags": [
+          "surface"
+        ],
+        "feature_tags": [],
+        "method_tags": [
+          "evenly_spaced"
+        ],
+        "task_tags": [],
+        "input_tags": []
+      },
+      "expected_tags": {
+        "dimension_tags": [
+          "surface"
+        ],
+        "method_tags": [
+          "evenly_spaced"
+        ],
+        "task_tags": [
+          "generate_representative_streamlines"
+        ],
+        "input_tags": [
+          "distance_threshold"
+        ]
+      },
+      "expected_application_ids": [
+        "1_s2_0_s0169260724001986_main_63f9c354_app_001",
+        "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_002",
+        "1_s2_0_s0010482519302240_main_764063ba_app_001"
+      ],
+      "returned_application_ids": [
+        "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_001",
+        "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_004",
+        "1_s2_0_s0169260724001986_main_63f9c354_app_001",
+        "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_002",
+        "a_method_for_critical_point_detection_and_seeds_point_se_12b1e961_app_002",
+        "image_guided_streamline_placement_on_curvilinear_grid_su_87ac5bf2_app_001",
+        "nafems09_glyph_and_streamline_placement_algorithms_for_c_df52bf28_app_001",
+        "2007_10_1117_12_765736_interactive_view_driven_evenly_sp_5c1b330d_app_001",
+        "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_002",
+        "1_s2_0_s2468502x23000165_main_0405eede_app_001"
+      ],
+      "hit_at_5": true,
+      "hit_at_10": true,
+      "hits": [
+        "1_s2_0_s0169260724001986_main_63f9c354_app_001",
+        "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_002"
+      ],
+      "top_results": [
+        {
+          "rank": 1,
+          "score": 0.70351,
+          "application_id": "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_001",
+          "paper_title": "Evenly-Spaced Streamlines for Surfaces: An Image-Based Approach",
+          "algorithm_name": "Evenly-Spaced Streamlines for Surfaces (image-based approach)"
+        },
+        {
+          "rank": 2,
+          "score": 0.700215,
+          "application_id": "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_004",
+          "paper_title": "A Survey of Seed Placement and Streamline Selection Techniques",
+          "algorithm_name": "Evenly-spaced streamline seeding for surfaces in 3D"
+        },
+        {
+          "rank": 3,
+          "score": 0.687754,
+          "application_id": "1_s2_0_s0169260724001986_main_63f9c354_app_001",
+          "paper_title": "Improved algorithm for generating evenly-spaced streamlines from an orientation field on a triangulated surface",
+          "algorithm_name": "Evenly-spaced streamlines on a triangulated surface"
+        },
+        {
+          "rank": 4,
+          "score": 0.681626,
+          "application_id": "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_002",
+          "paper_title": "Evenly-Spaced Streamlines for Surfaces: An Image-Based Approach",
+          "algorithm_name": "Image-based evenly-spaced streamline seeding"
+        },
+        {
+          "rank": 5,
+          "score": 0.679328,
+          "application_id": "a_method_for_critical_point_detection_and_seeds_point_se_12b1e961_app_002",
+          "paper_title": "A Method for Critical Point Detection and Seeds Point Selection in Surface Flow Fields of Unstructured Grids",
+          "algorithm_name": "Two-stage seed point placement for non-feature regions"
+        }
+      ]
+    },
+    {
+      "id": "unsteady_flow",
+      "query": "I need streamlines or pathlines for unsteady time-varying flow with temporal coherence between frames.",
+      "query_tags": {
+        "dimension_tags": [
+          "unsteady",
+          "time_dependent"
+        ],
+        "feature_tags": [],
+        "method_tags": [],
+        "task_tags": [
+          "maintain_temporal_coherence"
+        ],
+        "input_tags": []
+      },
+      "expected_tags": {
+        "dimension_tags": [
+          "unsteady",
+          "time_dependent"
+        ],
+        "task_tags": [
+          "maintain_temporal_coherence",
+          "generate_representative_streamlines"
+        ],
+        "input_tags": [
+          "vector_field"
+        ]
+      },
+      "expected_application_ids": [
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001",
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_002",
+        "978_3_540_88606_8_7_942bcbeb_app_004"
+      ],
+      "returned_application_ids": [
+        "similarity_measures_for_enhancing_interactive_streamline_111d8f42_app_003",
+        "2015_10_14569_ijacsa_2015_060417_visualization_of_input_2f425d95_app_004",
+        "transfer_function_based_2d_3d_interactive_spatiotemporal_247a2346_app_001",
+        "978_3_540_88606_8_7_942bcbeb_app_004",
+        "visualization_of_complex_unsteady_3d_flow_flowing_seed_p_710b5309_app_001",
+        "multi_resolution_unsteady_flow_visualization_268b6ce5_app_001",
+        "objective_lagrangian_vortex_cores_and_their_visual_repre_dc427f88_app_001",
+        "coherent_streamline_generation_for_2_d_vector_fields_7c7c0f87_app_001",
+        "objective_lagrangian_vortex_cores_and_their_visual_repre_dc427f88_app_002",
+        "visualization_of_complex_unsteady_3d_flow_flowing_seed_p_710b5309_app_002"
+      ],
+      "hit_at_5": true,
+      "hit_at_10": true,
+      "hits": [
+        "978_3_540_88606_8_7_942bcbeb_app_004"
+      ],
+      "top_results": [
+        {
+          "rank": 1,
+          "score": 0.72833,
+          "application_id": "similarity_measures_for_enhancing_interactive_streamline_111d8f42_app_003",
+          "paper_title": "Similarity Measures for Enhancing Interactive Streamline Seeding",
+          "algorithm_name": "Extension to unsteady flow using pathlines with time-varying curvature and torsion fields"
+        },
+        {
+          "rank": 2,
+          "score": 0.689405,
+          "application_id": "2015_10_14569_ijacsa_2015_060417_visualization_of_input_2f425d95_app_004",
+          "paper_title": "Visualization of Input Parameters for Stream and Pathline Seeding",
+          "algorithm_name": "Temporal seeding sensitivity field"
+        },
+        {
+          "rank": 3,
+          "score": 0.686095,
+          "application_id": "transfer_function_based_2d_3d_interactive_spatiotemporal_247a2346_app_001",
+          "paper_title": "Transfer function-based 2D/3D interactive spatiotemporal visualizations of mesoscale eddies",
+          "algorithm_name": "Viewport-adaptive 2D streamline seeding with spatiotemporal coherence"
+        },
+        {
+          "rank": 4,
+          "score": 0.684058,
+          "application_id": "978_3_540_88606_8_7_942bcbeb_app_004",
+          "paper_title": "Flow Structure based 3D Streamline Placement",
+          "algorithm_name": "Flow-structure-based 3D streamline placement"
+        },
+        {
+          "rank": 5,
+          "score": 0.683645,
+          "application_id": "visualization_of_complex_unsteady_3d_flow_flowing_seed_p_710b5309_app_001",
+          "paper_title": "Visualization of Complex Unsteady 3D Flow: Flowing Seed Points and Dynamically Evolving Seed Curves with Applications to Vortex Visualization in CFD Simulations of Ultra Low Reynolds Number Insect Flight",
+          "algorithm_name": "flowing seed points"
+        }
+      ]
+    },
+    {
+      "id": "entropy_saliency",
+      "query": "Use entropy or saliency to place representative streamline seeds in high information regions.",
+      "query_tags": {
+        "dimension_tags": [],
+        "feature_tags": [
+          "high_entropy_regions",
+          "salient_features"
+        ],
+        "method_tags": [
+          "entropy_based"
+        ],
+        "task_tags": [
+          "generate_representative_streamlines"
+        ],
+        "input_tags": [
+          "entropy_field"
+        ]
+      },
+      "expected_tags": {
+        "feature_tags": [
+          "high_entropy_regions",
+          "salient_features"
+        ],
+        "method_tags": [
+          "entropy_based"
+        ],
+        "task_tags": [
+          "generate_representative_streamlines",
+          "highlight_features"
+        ],
+        "input_tags": [
+          "entropy_field"
+        ]
+      },
+      "expected_application_ids": [
+        "049_053_76b9f1ca_app_001",
+        "049_053_76b9f1ca_app_002",
+        "2017_10_48550_arxiv_1707_04805_a_streamline_selection_te_c3b44a56_app_001"
+      ],
+      "returned_application_ids": [
+        "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_009",
+        "049_053_76b9f1ca_app_001",
+        "049_053_76b9f1ca_app_002",
+        "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_008",
+        "2010_10_1109_tvcg_2010_212_view_dependent_streamlines_fo_87aca219_app_001",
+        "2017_10_48550_arxiv_1707_04805_a_streamline_selection_te_c3b44a56_app_001",
+        "2021_10_18494_sam_2021_3047_adaptive_method_to_locate_se_63167a1d_app_001",
+        "ucalgary_2018_khan_fahim_5603c5b8_app_001",
+        "hierarchical_streamline_bundles_56022d37_app_001",
+        "3524304_3524328_4985aaea_app_001"
+      ],
+      "hit_at_5": true,
+      "hit_at_10": true,
+      "hits": [
+        "049_053_76b9f1ca_app_001",
+        "049_053_76b9f1ca_app_002",
+        "2017_10_48550_arxiv_1707_04805_a_streamline_selection_te_c3b44a56_app_001"
+      ],
+      "top_results": [
+        {
+          "rank": 1,
+          "score": 0.701469,
+          "application_id": "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_009",
+          "paper_title": "A Survey of Seed Placement and Streamline Selection Techniques",
+          "algorithm_name": "FlowTour skeleton-based seeding"
+        },
+        {
+          "rank": 2,
+          "score": 0.684389,
+          "application_id": "049_053_76b9f1ca_app_001",
+          "paper_title": "Integration-Aware Vector Field Super Resolution",
+          "algorithm_name": "IA-VFS"
+        },
+        {
+          "rank": 3,
+          "score": 0.683569,
+          "application_id": "049_053_76b9f1ca_app_002",
+          "paper_title": "Integration-Aware Vector Field Super Resolution",
+          "algorithm_name": "IA-VFS seeding and streamline-length tuning"
+        },
+        {
+          "rank": 4,
+          "score": 0.676559,
+          "application_id": "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_008",
+          "paper_title": "A Survey of Seed Placement and Streamline Selection Techniques",
+          "algorithm_name": "Entropy-guided streamline placement"
+        },
+        {
+          "rank": 5,
+          "score": 0.657519,
+          "application_id": "2010_10_1109_tvcg_2010_212_view_dependent_streamlines_fo_87aca219_app_001",
+          "paper_title": "View-Dependent Streamlines for 3D Vector Fields",
+          "algorithm_name": "View-dependent streamline selection/placement"
+        }
+      ]
+    },
+    {
+      "id": "view_dependent",
+      "query": "I want view dependent image-space streamline seeding that adapts to the camera and reduces occlusion.",
+      "query_tags": {
+        "dimension_tags": [],
+        "feature_tags": [
+          "occlusion_regions"
+        ],
+        "method_tags": [
+          "view_dependent"
+        ],
+        "task_tags": [
+          "reduce_occlusion"
+        ],
+        "input_tags": [
+          "viewpoint",
+          "image_space"
+        ]
+      },
+      "expected_tags": {
+        "method_tags": [
+          "view_dependent",
+          "image_guided"
+        ],
+        "task_tags": [
+          "reduce_occlusion",
+          "reduce_clutter"
+        ],
+        "input_tags": [
+          "viewpoint",
+          "image_space"
+        ]
+      },
+      "expected_application_ids": [
+        "2007_10_1117_12_765736_interactive_view_driven_evenly_sp_5c1b330d_app_001",
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001",
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_002"
+      ],
+      "returned_application_ids": [
+        "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_003",
+        "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_004",
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001",
+        "2010_10_1109_tvcg_2010_212_view_dependent_streamlines_fo_87aca219_app_001",
+        "streamline_selection_for_comparative_visualization_of_3d_5dfe647e_app_001",
+        "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_005",
+        "2017_10_48550_arxiv_1707_04805_a_streamline_selection_te_c3b44a56_app_001",
+        "transfer_function_based_2d_3d_interactive_spatiotemporal_247a2346_app_002",
+        "s00371_025_03871_3_1_70bd661f_app_001",
+        "amm_571_572_676_63d560a3_app_001"
+      ],
+      "hit_at_5": true,
+      "hit_at_10": true,
+      "hits": [
+        "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001"
+      ],
+      "top_results": [
+        {
+          "rank": 1,
+          "score": 0.75451,
+          "application_id": "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_003",
+          "paper_title": "A Survey of Seed Placement and Streamline Selection Techniques",
+          "algorithm_name": "Image-guided streamline placement"
+        },
+        {
+          "rank": 2,
+          "score": 0.712991,
+          "application_id": "computer_graphics_forum_2020_sane_a_survey_of_seed_place_56eb0965_app_004",
+          "paper_title": "A Survey of Seed Placement and Streamline Selection Techniques",
+          "algorithm_name": "Evenly-spaced streamline seeding for surfaces in 3D"
+        },
+        {
+          "rank": 3,
+          "score": 0.710448,
+          "application_id": "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001",
+          "paper_title": "Screen-space Streamline Seeding Method for Visualizing Unsteady Flow in Augmented Reality",
+          "algorithm_name": "Screen-space streamline seeding method"
+        },
+        {
+          "rank": 4,
+          "score": 0.709325,
+          "application_id": "2010_10_1109_tvcg_2010_212_view_dependent_streamlines_fo_87aca219_app_001",
+          "paper_title": "View-Dependent Streamlines for 3D Vector Fields",
+          "algorithm_name": "View-dependent streamline selection/placement"
+        },
+        {
+          "rank": 5,
+          "score": 0.690046,
+          "application_id": "streamline_selection_for_comparative_visualization_of_3d_5dfe647e_app_001",
+          "paper_title": "Streamline Selection for Comparative Visualization of 3D Fluid Simulation Result",
+          "algorithm_name": "Automatic streamline selection for comparative visualization"
+        }
+      ]
+    }
+  ]
+}

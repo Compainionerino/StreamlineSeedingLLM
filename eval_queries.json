@@ -1,0 +1,92 @@
+[
+  {
+    "id": "2d_critical_points",
+    "query": "I need streamline seeds for a 2D vector field around critical points and saddles without too much clutter.",
+    "expected_tags": {
+      "dimension_tags": ["2d"],
+      "feature_tags": ["critical_points", "saddles"],
+      "task_tags": ["reduce_clutter"],
+      "input_tags": ["critical_point_locations", "critical_point_types", "vector_field"]
+    },
+    "expected_application_ids": [
+      "a_streamline_placement_method_highlighting_flow_field_to_fba20a13_app_001",
+      "a_flow_guided_streamline_seeding_strategy_9cd29384_app_001",
+      "2009_10_1109_pacificvis_2009_4906832_dual_streamline_see_49ba61d0_app_001"
+    ]
+  },
+  {
+    "id": "3d_vortices_low_clutter",
+    "query": "I have a 3D CFD flow field and want to seed streamlines around vortices without too much clutter.",
+    "expected_tags": {
+      "dimension_tags": ["3d"],
+      "feature_tags": ["vortices"],
+      "task_tags": ["reduce_clutter"],
+      "input_tags": ["vector_field"]
+    },
+    "expected_application_ids": [
+      "2012_10_2312_localchapterevents_tpcg_tpcg12_053_060_adva_da4b84ca_app_001",
+      "a_stream_ribbon_seeding_strategy_4208c768_app_001",
+      "978_3_540_88606_8_7_942bcbeb_app_002"
+    ]
+  },
+  {
+    "id": "surface_flow",
+    "query": "Find seeding approaches for evenly spaced streamlines on a triangulated surface mesh.",
+    "expected_tags": {
+      "dimension_tags": ["surface"],
+      "method_tags": ["evenly_spaced"],
+      "task_tags": [],
+      "input_tags": []
+    },
+    "expected_application_ids": [
+      "1_s2_0_s0169260724001986_main_63f9c354_app_001",
+      "2009_10_1111_j_1467_8659_2009_01352_x_evenly_spaced_stre_8832c35a_app_002",
+      "1_s2_0_s0010482519302240_main_764063ba_app_001"
+    ]
+  },
+  {
+    "id": "unsteady_flow",
+    "query": "I need streamlines or pathlines for unsteady time-varying flow with temporal coherence between frames.",
+    "expected_tags": {
+      "dimension_tags": ["time_dependent", "unsteady"],
+      "task_tags": ["maintain_temporal_coherence"],
+      "input_tags": []
+    },
+    "expected_application_ids": [
+      "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001",
+      "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_002",
+      "978_3_540_88606_8_7_942bcbeb_app_004"
+    ]
+  },
+  {
+    "id": "entropy_saliency",
+    "query": "Use entropy or saliency to place representative streamline seeds in high information regions.",
+    "expected_tags": {
+      "feature_tags": ["high_entropy_regions", "salient_features"],
+      "method_tags": ["entropy_based"],
+      "task_tags": ["generate_representative_streamlines", "preserve_salient_features"],
+      "input_tags": ["entropy_field"]
+    },
+    "expected_application_ids": [
+      "049_053_76b9f1ca_app_001",
+      "049_053_76b9f1ca_app_002",
+      "2017_10_48550_arxiv_1707_04805_a_streamline_selection_te_c3b44a56_app_001"
+    ]
+  },
+  {
+    "id": "view_dependent",
+    "query": "I want view dependent image-space streamline seeding that adapts to the camera and reduces occlusion.",
+    "expected_tags": {
+      "dimension_tags": ["2d"],
+      "feature_tags": ["occlusion_regions"],
+      "method_tags": ["image_guided", "view_dependent"],
+      "task_tags": ["reduce_occlusion"],
+      "input_tags": ["image_space", "viewpoint"]
+    },
+    "expected_application_ids": [
+      "2007_10_1117_12_765736_interactive_view_driven_evenly_sp_5c1b330d_app_001",
+      "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_001",
+      "computer_animation_virtual_2024_kang_screen_space_stream_93d2dba5_app_002"
+    ]
+  }
+]

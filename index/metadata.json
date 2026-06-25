@@ -1,0 +1,113 @@
+{
+  "created_at_utc": "2026-06-25T10:02:32.594848Z",
+  "embedding": {
+    "backend": "sentence-transformers",
+    "details": {
+      "batch_size": 32,
+      "build_local_files_only": true,
+      "passage_prefix": "",
+      "query_prefix": "Represent this sentence for searching relevant passages: ",
+      "retrieval_local_files_only": true
+    },
+    "dimension": 384,
+    "model_name": "BAAI/bge-small-en-v1.5",
+    "normalize": true
+  },
+  "embedding_backend_error": null,
+  "embedding_backend_requested": "sentence-transformers",
+  "embedding_backend_used": "sentence-transformers",
+  "embedding_text_fields": [
+    "algorithm_name",
+    "algorithm_type",
+    "application_goal",
+    "application_context",
+    "target_feature",
+    "data_dimension",
+    "seed_placement_strategy",
+    "seed_input_information",
+    "seed_density_or_number",
+    "seed_spacing_or_filtering",
+    "streamline_length_control",
+    "integration_direction",
+    "stopping_criteria",
+    "parameters_reported",
+    "parameter_reasoning",
+    "reported_result",
+    "limitations_or_notes"
+  ],
+  "embeddings_path": "C:\\Masterarbeit\\RAG\\index\\embeddings.npy",
+  "record_count": 122,
+  "records_path": "C:\\Masterarbeit\\RAG\\index\\records.jsonl",
+  "source_data_path": "C:\\Masterarbeit\\RAG\\tagged_applications.jsonl",
+  "source_data_sha256": "6a2f49265696cd3c5dad8c2559531985cc007d374235137b2ae5d443d11d1e1b",
+  "vocabulary": {
+    "dimension_tags": [
+      "2d",
+      "3d",
+      "surface",
+      "volume",
+      "unsteady",
+      "time_dependent",
+      "curvilinear_grid",
+      "unstructured_grid"
+    ],
+    "feature_tags": [
+      "critical_points",
+      "saddles",
+      "sources_sinks",
+      "vortices",
+      "vortex_cores",
+      "high_entropy_regions",
+      "salient_features",
+      "flow_topology",
+      "boundaries",
+      "blank_regions",
+      "occlusion_regions"
+    ],
+    "input_tags": [
+      "vector_field",
+      "scalar_field",
+      "entropy_field",
+      "critical_point_locations",
+      "critical_point_types",
+      "topology_graph",
+      "user_seed",
+      "viewpoint",
+      "image_space",
+      "density_control",
+      "distance_threshold",
+      "feature_detector"
+    ],
+    "method_tags": [
+      "evenly_spaced",
+      "feature_guided",
+      "topology_guided",
+      "entropy_based",
+      "image_guided",
+      "view_dependent",
+      "template_based",
+      "poisson_disk",
+      "farthest_point",
+      "clustering",
+      "similarity_based",
+      "optimization_based",
+      "interactive",
+      "hierarchical",
+      "multiresolution"
+    ],
+    "task_tags": [
+      "reduce_clutter",
+      "preserve_salient_features",
+      "cover_domain",
+      "highlight_features",
+      "compare_flows",
+      "improve_perception",
+      "reduce_occlusion",
+      "maintain_temporal_coherence",
+      "support_exploration",
+      "generate_representative_streamlines"
+    ]
+  },
+  "vocabulary_mode": "loaded",
+  "vocabulary_path": "C:\\Masterarbeit\\RAG\\tag_vocabulary.json"
+}
