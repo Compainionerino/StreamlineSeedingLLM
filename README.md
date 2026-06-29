@@ -108,6 +108,7 @@ The app provides:
 - isolated generated-code smoke testing in a subprocess so VTK/Qt crashes do not terminate the main app
 - a safe PNG preview rendered by the subprocess
 - an interactive VTK viewport launched in a monitored child process; if that window crashes, the main app stays open and reports the child-process exit
+- interactive viewport stdout/stderr mirrored to the launching terminal for easier copying/debugging
 
 The generated code must define:
 

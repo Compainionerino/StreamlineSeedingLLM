@@ -726,6 +726,7 @@ if GUI_IMPORT_ERROR is None:
                 return
             text = bytes(process.readAllStandardOutput()).decode("utf-8", errors="replace")
             if text:
+                print(text, end="", file=sys.stdout, flush=True)
                 self.append_viewport_log(text.rstrip())
             if "interactive viewport ready" in text:
                 self.interactive_status_label.setText("Interactive VTK viewport running in a child window.")
@@ -737,6 +738,7 @@ if GUI_IMPORT_ERROR is None:
                 return
             text = bytes(process.readAllStandardError()).decode("utf-8", errors="replace")
             if text:
+                print(text, end="", file=sys.stderr, flush=True)
                 self.append_viewport_log("[stderr]\n" + text.rstrip())
 
         def append_viewport_log(self, text: str) -> None:
@@ -748,7 +750,9 @@ if GUI_IMPORT_ERROR is None:
             self.set_status("Interactive VTK viewport process started")
 
         def handle_viewport_error(self, error: Any) -> None:
-            self.append_viewport_log(f"[main] QProcess error: {error}")
+            message = f"[main] QProcess error: {error}"
+            print(message, file=sys.stderr, flush=True)
+            self.append_viewport_log(message)
             self.interactive_status_label.setText("Interactive VTK viewport process error.")
             self.set_status("Interactive viewport process error")
             if error == QProcess.ProcessError.FailedToStart:
@@ -767,6 +771,11 @@ if GUI_IMPORT_ERROR is None:
 
             crashed = exit_status == QProcess.ExitStatus.CrashExit or exit_code != 0
             if crashed:
+                print(
+                    f"[main] Interactive VTK viewport exited with code {exit_code}.",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 self.interactive_status_label.setText(
                     f"Interactive VTK viewport exited with code {exit_code}."
                 )
