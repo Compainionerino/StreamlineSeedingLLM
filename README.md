@@ -105,8 +105,9 @@ The app provides:
 - LiteLLM-based model switching for code generation
 - default code generation with `openai/gpt-5.4-mini`, a 16,000 token output budget, automatic continuation on truncation, and two validation-repair attempts
 - explicit confirmation before generated VTK code is executed
-- isolated generated-code execution in a subprocess so VTK/Qt crashes do not terminate the main app
-- a safe PNG preview rendered by the subprocess, plus a reserved interactive VTK viewport tab
+- isolated generated-code smoke testing in a subprocess so VTK/Qt crashes do not terminate the main app
+- a safe PNG preview rendered by the subprocess
+- an interactive VTK viewport launched in a monitored child process; if that window crashes, the main app stays open and reports the child-process exit
 
 The generated code must define:
 

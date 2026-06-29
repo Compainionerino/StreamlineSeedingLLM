@@ -107,10 +107,10 @@ def build_final_prompt(
 Your task is to implement a visualization focused on streamline or pathline seeding. Use the dataset metadata, the user request, and the retrieved literature records to choose a practical seeding technique and parameterization.
 
 Host application contract:
-- The host application already owns a PySide6 window with a QVTKRenderWindowInteractor viewport.
-- The host application owns the vtkRenderWindow, interactor, event loop, and final Render() call.
+- The trusted visualization host process owns a PySide6 window with a QVTKRenderWindowInteractor viewport.
+- The host process owns the vtkRenderWindow, interactor, event loop, and final Render() call.
 - Your code must only create VTK pipeline objects and return a vtkRenderer.
-- The host application will attach the returned vtkRenderer to the existing QVTK viewport.
+- The host process will attach the returned vtkRenderer to the QVTK viewport.
 
 Hard requirements:
 - Produce only Python code, preferably in a single fenced code block.

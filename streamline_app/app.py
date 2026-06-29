@@ -9,6 +9,7 @@ from streamline_retrieval.retrieval import HybridRetriever
 
 from .code_validation import validate_generated_code
 from .dataset_metadata import extract_dataset_metadata, format_metadata_summary
+from .interactive_execution import cleanup_interactive_payload, prepare_interactive_viewport_launch
 from .llm import DEFAULT_MAX_TOKENS, LLMSettings, generate_code
 from .prompting import PromptBundle, build_final_prompt
 from .query import UserRequest, build_retrieval_query, infer_request_defaults_from_metadata
@@ -18,7 +19,7 @@ from .safe_execution import SafeExecutionResult, run_generated_code_safely
 
 GUI_IMPORT_ERROR: Exception | None = None
 try:
-    from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
+    from PySide6.QtCore import QObject, QProcess, QRunnable, Qt, QThreadPool, Signal, Slot
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QApplication,
@@ -42,7 +43,6 @@ try:
         QWidget,
         QDoubleSpinBox,
     )
-    from vtkmodules.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 except Exception as exc:  # pragma: no cover - depends on optional GUI dependencies
     GUI_IMPORT_ERROR = exc
 
@@ -108,6 +108,8 @@ if GUI_IMPORT_ERROR is None:
             self.llm_response: str = ""
             self.last_artifacts: RunArtifacts | None = None
             self.last_preview_png: str | None = None
+            self.visualization_process: QProcess | None = None
+            self.visualization_payload_dir: str | None = None
             self.thread_pool = QThreadPool.globalInstance()
             self.active_workers: set[BackgroundTask] = set()
             self.busy = False
@@ -161,6 +163,12 @@ if GUI_IMPORT_ERROR is None:
             ):
                 if button is not None:
                     button.setEnabled(enabled)
+            if getattr(self, "stop_viewport_button", None) is not None:
+                self.stop_viewport_button.setEnabled(self.viewport_process_running())
+
+        def viewport_process_running(self) -> bool:
+            process = self.visualization_process
+            return process is not None and process.state() != QProcess.ProcessState.NotRunning
 
         def run_background_task(
             self,
@@ -332,13 +340,17 @@ if GUI_IMPORT_ERROR is None:
             self.build_prompt_button.clicked.connect(self.build_prompt)
             self.generate_button = QPushButton("Generate VTK Code")
             self.generate_button.clicked.connect(self.generate_vtk_code)
-            self.run_button = QPushButton("Validate And Run Code")
+            self.run_button = QPushButton("Validate, Preview, And Open Viewport")
             self.run_button.clicked.connect(self.run_generated_code)
+            self.stop_viewport_button = QPushButton("Stop Interactive Viewport")
+            self.stop_viewport_button.clicked.connect(self.stop_interactive_viewport)
+            self.stop_viewport_button.setEnabled(False)
 
             layout.addWidget(self.retrieve_button)
             layout.addWidget(self.build_prompt_button)
             layout.addWidget(self.generate_button)
             layout.addWidget(self.run_button)
+            layout.addWidget(self.stop_viewport_button)
             return group
 
         def _tabs(self) -> QTabWidget:
@@ -368,13 +380,15 @@ if GUI_IMPORT_ERROR is None:
 
             interactive_panel = QWidget()
             interactive_layout = QVBoxLayout(interactive_panel)
-            interactive_layout.addWidget(QLabel("Interactive VTK viewport"))
-            self.vtk_widget = QVTKRenderWindowInteractor(interactive_panel)
-            interactive_layout.addWidget(self.vtk_widget, 1)
-            self.vtk_widget.Initialize()
+            self.interactive_status_label = QLabel("No interactive viewport process running.")
+            self.viewport_log = QPlainTextEdit()
+            self.viewport_log.setReadOnly(True)
+            self.viewport_log.setPlaceholderText("Interactive viewport process output")
+            interactive_layout.addWidget(self.interactive_status_label)
+            interactive_layout.addWidget(self.viewport_log, 1)
 
             self.viewport_tabs.addTab(preview_panel, "Safe Preview")
-            self.viewport_tabs.addTab(interactive_panel, "Interactive VTK")
+            self.viewport_tabs.addTab(interactive_panel, "Interactive Viewport")
             layout.addWidget(self.viewport_tabs, 1)
             return panel
 
@@ -479,6 +493,7 @@ if GUI_IMPORT_ERROR is None:
             self.last_preview_png = result.output_png
             self.show_preview_image(result.output_png)
             self.save_run_artifacts()
+            self.launch_interactive_viewport()
 
         def ensure_retriever(self) -> HybridRetriever:
             if self.retriever is None:
@@ -618,10 +633,22 @@ if GUI_IMPORT_ERROR is None:
                 self.show_error("Generated code failed validation", "\n".join(validation.errors))
                 return
 
+            if self.viewport_process_running():
+                replace_decision = QMessageBox.question(
+                    self,
+                    "Replace interactive viewport?",
+                    "An interactive viewport is already running. Stop it and launch a new one?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if replace_decision != QMessageBox.StandardButton.Yes:
+                    self.set_status("Execution cancelled")
+                    return
+
             decision = QMessageBox.question(
                 self,
                 "Run generated code?",
-                "The generated code passed basic AST checks, but it is still trusted local Python code. Run it now?",
+                "The generated code passed basic AST checks. The app will smoke-test it in a subprocess, then open an interactive VTK child window. Run it now?",
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
@@ -645,10 +672,10 @@ if GUI_IMPORT_ERROR is None:
                 return result
 
             self.run_background_task(
-                message="Running generated VTK code safely...",
+                message="Smoke-testing generated VTK code safely...",
                 work=work,
                 on_success=self.apply_safe_execution_result,
-                success_message="Rendered safe subprocess preview",
+                success_message="Safe preview rendered; launching interactive viewport",
                 error_title="Visualization execution failed",
             )
 
@@ -664,12 +691,123 @@ if GUI_IMPORT_ERROR is None:
             self.preview_label.setPixmap(scaled)
             self.viewport_tabs.setCurrentIndex(0)
 
-        def attach_renderer(self, renderer: Any) -> None:
-            render_window = self.vtk_widget.GetRenderWindow()
-            render_window.GetRenderers().RemoveAllItems()
-            render_window.AddRenderer(renderer)
-            renderer.ResetCamera()
-            render_window.Render()
+        def launch_interactive_viewport(self) -> None:
+            self.close_existing_viewport_process()
+            self.viewport_log.clear()
+            self.viewport_tabs.setCurrentIndex(1)
+            self.interactive_status_label.setText("Launching interactive VTK viewport process...")
+
+            launch = prepare_interactive_viewport_launch(
+                self.code_text.toPlainText().strip(),
+                dataset_path=self.dataset_path.text().strip(),
+                metadata=self.metadata_payload(),
+                user_request=self.current_request().to_dict(),
+            )
+
+            process = QProcess(self)
+            process.setProgram(launch.program)
+            process.setArguments(launch.arguments)
+            process.setWorkingDirectory(launch.working_directory)
+            process.readyReadStandardOutput.connect(self.read_viewport_stdout)
+            process.readyReadStandardError.connect(self.read_viewport_stderr)
+            process.started.connect(self.handle_viewport_started)
+            process.errorOccurred.connect(self.handle_viewport_error)
+            process.finished.connect(self.handle_viewport_finished)
+
+            self.visualization_process = process
+            self.visualization_payload_dir = launch.payload_dir
+            self.stop_viewport_button.setEnabled(True)
+            self.set_status("Launching interactive VTK viewport process...")
+            process.start()
+
+        def read_viewport_stdout(self) -> None:
+            process = self.visualization_process
+            if process is None:
+                return
+            text = bytes(process.readAllStandardOutput()).decode("utf-8", errors="replace")
+            if text:
+                self.append_viewport_log(text.rstrip())
+            if "interactive viewport ready" in text:
+                self.interactive_status_label.setText("Interactive VTK viewport running in a child window.")
+                self.set_status("Interactive VTK viewport running")
+
+        def read_viewport_stderr(self) -> None:
+            process = self.visualization_process
+            if process is None:
+                return
+            text = bytes(process.readAllStandardError()).decode("utf-8", errors="replace")
+            if text:
+                self.append_viewport_log("[stderr]\n" + text.rstrip())
+
+        def append_viewport_log(self, text: str) -> None:
+            if text:
+                self.viewport_log.appendPlainText(text)
+
+        def handle_viewport_started(self) -> None:
+            self.interactive_status_label.setText("Interactive VTK viewport process started.")
+            self.set_status("Interactive VTK viewport process started")
+
+        def handle_viewport_error(self, error: Any) -> None:
+            self.append_viewport_log(f"[main] QProcess error: {error}")
+            self.interactive_status_label.setText("Interactive VTK viewport process error.")
+            self.set_status("Interactive viewport process error")
+            if error == QProcess.ProcessError.FailedToStart:
+                cleanup_interactive_payload(self.visualization_payload_dir)
+                self.visualization_payload_dir = None
+                self.visualization_process = None
+                self.stop_viewport_button.setEnabled(False)
+
+        def handle_viewport_finished(self, exit_code: int, exit_status: Any) -> None:
+            self.read_viewport_stdout()
+            self.read_viewport_stderr()
+            cleanup_interactive_payload(self.visualization_payload_dir)
+            self.visualization_payload_dir = None
+            self.visualization_process = None
+            self.stop_viewport_button.setEnabled(False)
+
+            crashed = exit_status == QProcess.ExitStatus.CrashExit or exit_code != 0
+            if crashed:
+                self.interactive_status_label.setText(
+                    f"Interactive VTK viewport exited with code {exit_code}."
+                )
+                self.set_status("Interactive VTK viewport exited unexpectedly")
+                log_tail = self.viewport_log.toPlainText()[-3000:]
+                QMessageBox.warning(
+                    self,
+                    "Interactive viewport exited",
+                    "The interactive VTK viewport process exited, but the main app stayed open.\n\n"
+                    f"Exit code: {exit_code}\n\n"
+                    f"Recent process output:\n{log_tail}",
+                )
+            else:
+                self.interactive_status_label.setText("Interactive VTK viewport closed.")
+                self.set_status("Interactive VTK viewport closed")
+
+        def stop_interactive_viewport(self) -> None:
+            if not self.viewport_process_running():
+                self.interactive_status_label.setText("No interactive viewport process running.")
+                self.stop_viewport_button.setEnabled(False)
+                return
+            self.close_existing_viewport_process()
+            self.interactive_status_label.setText("Interactive VTK viewport stopped.")
+            self.append_viewport_log("[main] Interactive viewport stopped.")
+            self.set_status("Interactive VTK viewport stopped")
+
+        def close_existing_viewport_process(self) -> None:
+            process = self.visualization_process
+            self.visualization_process = None
+            if process is not None:
+                process.blockSignals(True)
+                if process.state() != QProcess.ProcessState.NotRunning:
+                    process.terminate()
+                    if not process.waitForFinished(3000):
+                        process.kill()
+                        process.waitForFinished(1000)
+                process.deleteLater()
+            cleanup_interactive_payload(self.visualization_payload_dir)
+            self.visualization_payload_dir = None
+            if getattr(self, "stop_viewport_button", None) is not None:
+                self.stop_viewport_button.setEnabled(False)
 
         def save_run_artifacts(self) -> None:
             if self.prompt_bundle is None or self.retrieval_payload is None:
@@ -686,6 +824,10 @@ if GUI_IMPORT_ERROR is None:
         def show_error(self, title: str, message: str) -> None:
             QMessageBox.critical(self, title, message)
             self.set_status(title)
+
+        def closeEvent(self, event: Any) -> None:
+            self.close_existing_viewport_process()
+            super().closeEvent(event)
 
 
 def main(argv: list[str] | None = None) -> int:

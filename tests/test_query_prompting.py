@@ -71,7 +71,7 @@ class QueryPromptingTests(unittest.TestCase):
         )
 
         self.assertIn("QVTKRenderWindowInteractor viewport", bundle.final_prompt)
-        self.assertIn("host application will attach the returned vtkRenderer", bundle.final_prompt)
+        self.assertIn("host process will attach the returned vtkRenderer", bundle.final_prompt)
         self.assertIn("Do not create a vtkRenderWindow", bundle.final_prompt)
         self.assertIn("Do not call Start(), Initialize(), Render()", bundle.final_prompt)
 
