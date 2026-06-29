@@ -88,6 +88,35 @@ Full JSON is printed by default:
 
 Input-query tags are produced by applying the same corpus normalization rule set to the query text. This keeps query tags and record tags aligned; no separate query-only regex vocabulary is used.
 
+## Local VTK Seeding RAG App
+
+Launch the desktop application:
+
+```powershell
+.\.venv\Scripts\python.exe launch_vtk_app.py
+```
+
+The app provides:
+
+- a structured visualization request form aligned with the retrieval records
+- VTK-native dataset metadata extraction for `.vtk`, `.vti`, `.vtu`, `.vtp`, `.vts`, and `.vtr`
+- local retrieval over the existing seeding index
+- final prompt assembly from dataset metadata, user intent, and selected structured record fields
+- LiteLLM-based model switching for code generation
+- default code generation with `openai/gpt-5.4-mini`, a 16,000 token output budget, automatic continuation on truncation, and two validation-repair attempts
+- explicit confirmation before generated VTK code is executed
+- isolated generated-code execution in a subprocess so VTK/Qt crashes do not terminate the main app
+- a safe PNG preview rendered by the subprocess, plus a reserved interactive VTK viewport tab
+
+The generated code must define:
+
+```python
+def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
+    """Return a vtkRenderer containing the complete visualization."""
+```
+
+Generated prompts, retrieval snapshots, LLM responses, and code are stored under ignored `runs/generated/` folders for reproducibility.
+
 ## Evaluation
 
 Run the curated example queries:
@@ -101,6 +130,16 @@ The default report path is:
 ```text
 reports/evaluation.json
 ```
+
+## Tests
+
+Run the unit tests:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests
+```
+
+VTK-dependent tests are skipped when `vtk` is not installed.
 
 ## Offline Note
 
