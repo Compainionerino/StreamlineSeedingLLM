@@ -44,7 +44,33 @@ class DatasetMetadataTests(unittest.TestCase):
         self.assertIn("vector_field", payload["hints"])
         self.assertEqual(payload["active_point_vectors"], "velocity")
 
+    def test_extracts_legacy_structured_grid_dimensions(self) -> None:
+        import vtk  # type: ignore
+
+        grid = vtk.vtkStructuredGrid()
+        grid.SetDimensions(2, 2, 2)
+        points = vtk.vtkPoints()
+        for z in range(2):
+            for y in range(2):
+                for x in range(2):
+                    points.InsertNextPoint(float(x), float(y), float(z))
+        grid.SetPoints(points)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            path = Path(tmp_dir) / "structured.vtk"
+            writer = vtk.vtkStructuredGridWriter()
+            writer.SetFileName(str(path))
+            writer.SetInputData(grid)
+            self.assertEqual(writer.Write(), 1)
+
+            metadata = extract_dataset_metadata(path)
+
+        payload = metadata.to_dict()
+        self.assertEqual(payload["dataset_class"], "vtkStructuredGrid")
+        self.assertEqual(payload["dimensions"], (2, 2, 2))
+        self.assertIn("3d", payload["hints"])
+        self.assertIn("volume", payload["hints"])
+
 
 if __name__ == "__main__":
     unittest.main()
-

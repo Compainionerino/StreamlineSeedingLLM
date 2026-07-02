@@ -131,7 +131,11 @@ def _array_metadata(attributes: Any, association: str) -> list[ArrayMetadata]:
 def _dimensions(dataset: Any) -> tuple[int, int, int] | None:
     if not hasattr(dataset, "GetDimensions"):
         return None
-    dimensions = dataset.GetDimensions()
+    try:
+        dimensions = dataset.GetDimensions()
+    except TypeError:
+        dimensions = [0, 0, 0]
+        dataset.GetDimensions(dimensions)
     if not dimensions:
         return None
     return tuple(int(value) for value in dimensions)
@@ -246,4 +250,3 @@ def format_metadata_summary(metadata: DatasetMetadata | dict[str, Any]) -> str:
         lines.append(f"{label}: " + ", ".join(parts))
 
     return "\n".join(lines)
-
