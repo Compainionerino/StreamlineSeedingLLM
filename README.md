@@ -103,7 +103,7 @@ The app provides:
 - local retrieval over the existing seeding index
 - final prompt assembly from dataset metadata, user intent, and selected structured record fields
 - LiteLLM-based model switching for code generation
-- default code generation with `openai/gpt-5.4-mini`, a 16,000 token output budget, automatic continuation on truncation, and two validation-repair attempts
+- default code generation with `openai/gpt-5.4-mini`, a 50,000 token output budget adjustable up to 200,000 tokens, automatic continuation on truncation, and two validation-repair attempts
 - explicit confirmation before generated VTK code is executed
 - isolated generated-code smoke testing in a subprocess so VTK/Qt crashes do not terminate the main app
 - a safe PNG preview rendered by the subprocess

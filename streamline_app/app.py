@@ -10,7 +10,7 @@ from streamline_retrieval.retrieval import HybridRetriever
 from .code_validation import validate_generated_code
 from .dataset_metadata import extract_dataset_metadata, format_metadata_summary
 from .interactive_execution import cleanup_interactive_payload, prepare_interactive_viewport_launch
-from .llm import DEFAULT_MAX_TOKENS, LLMSettings, generate_code
+from .llm import DEFAULT_MAX_TOKENS, MAX_TOKEN_LIMIT, LLMSettings, generate_code
 from .prompting import PromptBundle, build_final_prompt
 from .query import UserRequest, build_retrieval_query, infer_request_defaults_from_metadata
 from .run_store import RunArtifacts, write_run_artifacts
@@ -316,7 +316,7 @@ if GUI_IMPORT_ERROR is None:
             self.temperature.setSingleStep(0.05)
             self.temperature.setValue(0.2)
             self.max_tokens = QSpinBox()
-            self.max_tokens.setRange(512, 32768)
+            self.max_tokens.setRange(512, MAX_TOKEN_LIMIT)
             self.max_tokens.setSingleStep(512)
             self.max_tokens.setValue(DEFAULT_MAX_TOKENS)
             self.top_k = QSpinBox()

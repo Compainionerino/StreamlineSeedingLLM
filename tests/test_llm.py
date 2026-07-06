@@ -4,7 +4,7 @@ import sys
 import types
 import unittest
 
-from streamline_app.llm import LLMSettings, extract_code_block, generate_code
+from streamline_app.llm import DEFAULT_MAX_TOKENS, MAX_TOKEN_LIMIT, LLMSettings, extract_code_block, generate_code
 
 
 class FakeLiteLLM:
@@ -41,6 +41,31 @@ def create_visualization(dataset_path, metadata, user_request):
 
     def test_returns_raw_text_when_unfenced(self) -> None:
         self.assertEqual(extract_code_block("print('x')"), "print('x')")
+
+    def test_default_token_budget_is_large_enough_for_gui_start_value(self) -> None:
+        self.assertEqual(DEFAULT_MAX_TOKENS, 50000)
+        self.assertGreaterEqual(MAX_TOKEN_LIMIT, DEFAULT_MAX_TOKENS)
+
+    def test_generate_code_passes_default_token_budget_to_litellm(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ]
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        generate_code("make vtk code", LLMSettings(model="fake", repair_attempts=0))
+
+        self.assertEqual(fake.calls[0]["max_tokens"], 50000)
 
     def test_generate_code_continues_truncated_response(self) -> None:
         fake = FakeLiteLLM(

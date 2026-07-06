@@ -10,7 +10,8 @@ class LLMError(RuntimeError):
     """Raised when code generation through LiteLLM fails."""
 
 
-DEFAULT_MAX_TOKENS = 16000
+DEFAULT_MAX_TOKENS = 50000
+MAX_TOKEN_LIMIT = 200000
 DEFAULT_MAX_CONTINUATIONS = 2
 DEFAULT_REPAIR_ATTEMPTS = 2
 
