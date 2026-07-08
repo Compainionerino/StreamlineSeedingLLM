@@ -102,13 +102,14 @@ The app provides:
 - VTK-native dataset metadata extraction for `.vtk`, `.vti`, `.vtu`, `.vtp`, `.vts`, and `.vtr`
 - local retrieval over the existing seeding index
 - final prompt assembly from dataset metadata, user intent, and selected structured record fields
-- LiteLLM-based model switching for code generation
+- LiteLLM-based provider/model switching for code generation, including OpenAI, Anthropic, Gemini, and custom LiteLLM-compatible endpoints
 - default code generation with `openai/gpt-5.4-mini`, a 50,000 token output budget adjustable up to 200,000 tokens, automatic continuation on truncation, and two validation-repair attempts
 - explicit confirmation before generated VTK code is executed
 - isolated generated-code smoke testing in a subprocess so VTK/Qt crashes do not terminate the main app
 - a safe PNG preview rendered by the subprocess
 - an interactive VTK viewport launched in a monitored child process; if that window crashes, the main app stays open and reports the child-process exit
 - interactive viewport stdout/stderr mirrored to the launching terminal for easier copying/debugging
+- automatic last-session restore for the dataset path, request fields, retrieval state, prompt, generated code, and non-secret LLM settings
 
 The generated code must define:
 
@@ -118,6 +119,9 @@ def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
 ```
 
 Generated prompts, retrieval snapshots, LLM responses, and code are stored under ignored `runs/generated/` folders for reproducibility.
+The most recent GUI session is stored locally under ignored `runs/sessions/` and restored automatically on the next launch. API keys are not saved.
+
+In the LLM panel, choose a provider and enter the matching API key, or leave the key field empty when the provider-specific environment variable is already set. The app only checks the API key for the currently selected/resolved model provider. The model field remains editable, so any LiteLLM model string supported by your installed LiteLLM version can be used.
 
 ## Evaluation
 

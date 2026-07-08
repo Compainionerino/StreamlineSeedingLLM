@@ -10,16 +10,17 @@ from streamline_retrieval.retrieval import HybridRetriever
 from .code_validation import validate_generated_code
 from .dataset_metadata import extract_dataset_metadata, format_metadata_summary
 from .interactive_execution import cleanup_interactive_payload, prepare_interactive_viewport_launch
-from .llm import DEFAULT_MAX_TOKENS, MAX_TOKEN_LIMIT, LLMSettings, generate_code
+from .llm import DEFAULT_MAX_TOKENS, MAX_TOKEN_LIMIT, LLMSettings, generate_code, normalize_model_name
 from .prompting import PromptBundle, build_final_prompt
 from .query import UserRequest, build_retrieval_query, infer_request_defaults_from_metadata
 from .run_store import RunArtifacts, write_run_artifacts
 from .safe_execution import SafeExecutionResult, run_generated_code_safely
+from .session_store import load_last_session, write_last_session
 
 
 GUI_IMPORT_ERROR: Exception | None = None
 try:
-    from PySide6.QtCore import QObject, QProcess, QRunnable, Qt, QThreadPool, Signal, Slot
+    from PySide6.QtCore import QObject, QProcess, QRunnable, Qt, QThreadPool, QTimer, Signal, Slot
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QApplication,
@@ -42,9 +43,57 @@ try:
         QVBoxLayout,
         QWidget,
         QDoubleSpinBox,
+        QComboBox,
     )
 except Exception as exc:  # pragma: no cover - depends on optional GUI dependencies
     GUI_IMPORT_ERROR = exc
+
+
+DEFAULT_LLM_PROVIDER_ID = "openai"
+LLM_PROVIDER_OPTIONS: tuple[dict[str, str], ...] = (
+    {
+        "id": "openai",
+        "label": "OpenAI",
+        "default_model": "openai/gpt-5.4-mini",
+        "model_prefix": "openai/",
+        "api_key_placeholder": "Optional OpenAI API key; OPENAI_API_KEY also works",
+        "api_base_placeholder": "Optional OpenAI-compatible api_base",
+    },
+    {
+        "id": "anthropic",
+        "label": "Anthropic",
+        "default_model": "anthropic/claude-sonnet-4-20250514",
+        "model_prefix": "anthropic/",
+        "api_key_placeholder": "Optional Anthropic API key; ANTHROPIC_API_KEY also works",
+        "api_base_placeholder": "Optional Anthropic-compatible api_base",
+    },
+    {
+        "id": "gemini",
+        "label": "Google Gemini",
+        "default_model": "gemini/gemini-2.5-pro",
+        "model_prefix": "gemini/",
+        "api_key_placeholder": "Optional Gemini API key; GEMINI_API_KEY or GOOGLE_API_KEY also works",
+        "api_base_placeholder": "Optional Gemini-compatible api_base",
+    },
+    {
+        "id": "custom",
+        "label": "Custom LiteLLM",
+        "default_model": "",
+        "model_prefix": "",
+        "api_key_placeholder": "Optional provider API key; environment variables also work",
+        "api_base_placeholder": "Optional LiteLLM api_base",
+    },
+)
+LLM_PROVIDER_BY_ID = {provider["id"]: provider for provider in LLM_PROVIDER_OPTIONS}
+
+
+def _infer_provider_id_from_model(model_name: str) -> str:
+    model = model_name.strip()
+    for provider in LLM_PROVIDER_OPTIONS:
+        prefix = provider.get("model_prefix", "")
+        if prefix and model.startswith(prefix):
+            return provider["id"]
+    return "custom"
 
 
 def _pretty_json(payload: Any) -> str:
@@ -70,6 +119,18 @@ def _retrieval_summary(payload: dict[str, Any]) -> str:
 
 
 if GUI_IMPORT_ERROR is None:
+
+    class WheelScopedTextEdit(QTextEdit):
+        def wheelEvent(self, event: Any) -> None:
+            super().wheelEvent(event)
+            event.accept()
+
+
+    class WheelScopedPlainTextEdit(QPlainTextEdit):
+        def wheelEvent(self, event: Any) -> None:
+            super().wheelEvent(event)
+            event.accept()
+
 
     class TaskSignals(QObject):
         status = Signal(str)
@@ -113,16 +174,23 @@ if GUI_IMPORT_ERROR is None:
             self.thread_pool = QThreadPool.globalInstance()
             self.active_workers: set[BackgroundTask] = set()
             self.busy = False
+            self.restoring_session = False
 
-            splitter = QSplitter(Qt.Orientation.Horizontal)
-            splitter.addWidget(self._build_left_panel())
-            splitter.addWidget(self._build_viewport_panel())
-            splitter.setStretchFactor(0, 0)
-            splitter.setStretchFactor(1, 1)
-            splitter.setSizes([560, 940])
-            self.setCentralWidget(splitter)
+            self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+            self.main_splitter.addWidget(self._build_left_panel())
+            self.main_splitter.addWidget(self._build_viewport_panel())
+            self.main_splitter.setStretchFactor(0, 0)
+            self.main_splitter.setStretchFactor(1, 1)
+            self.main_splitter.setSizes([560, 940])
+            self.setCentralWidget(self.main_splitter)
             self._build_status_strip()
-            self.set_status("Ready")
+            self.session_autosave_timer = QTimer(self)
+            self.session_autosave_timer.setSingleShot(True)
+            self.session_autosave_timer.setInterval(1200)
+            self.session_autosave_timer.timeout.connect(self.save_session)
+            self._connect_session_autosave()
+            if not self.restore_last_session():
+                self.set_status("Ready")
 
         def _build_status_strip(self) -> None:
             self.busy_indicator = QProgressBar()
@@ -165,6 +233,235 @@ if GUI_IMPORT_ERROR is None:
                     button.setEnabled(enabled)
             if getattr(self, "stop_viewport_button", None) is not None:
                 self.stop_viewport_button.setEnabled(self.viewport_process_running())
+
+        def current_provider_id(self) -> str:
+            provider_id = self.provider_combo.currentData()
+            if isinstance(provider_id, str) and provider_id in LLM_PROVIDER_BY_ID:
+                return provider_id
+            return "custom"
+
+        def set_provider_id(self, provider_id: str) -> None:
+            index = self.provider_combo.findData(provider_id)
+            if index < 0:
+                index = self.provider_combo.findData("custom")
+            if index >= 0:
+                self.provider_combo.setCurrentIndex(index)
+
+        def current_provider_option(self) -> dict[str, str]:
+            return LLM_PROVIDER_BY_ID.get(self.current_provider_id(), LLM_PROVIDER_BY_ID["custom"])
+
+        def update_provider_placeholders(self) -> None:
+            provider = self.current_provider_option()
+            self.model_name.setPlaceholderText(provider.get("default_model") or "provider/model-name")
+            self.api_key.setPlaceholderText(provider["api_key_placeholder"])
+            self.api_base.setPlaceholderText(provider["api_base_placeholder"])
+
+        def handle_provider_changed(self, *_: Any) -> None:
+            provider = self.current_provider_option()
+            previous_model = self.model_name.text().strip()
+            known_defaults = {
+                option["default_model"]
+                for option in LLM_PROVIDER_OPTIONS
+                if option.get("default_model")
+            }
+            known_prefixes = [
+                option["model_prefix"]
+                for option in LLM_PROVIDER_OPTIONS
+                if option.get("model_prefix")
+            ]
+            should_replace_model = (
+                provider["id"] != "custom"
+                and (
+                    not previous_model
+                    or previous_model in known_defaults
+                    or any(previous_model.startswith(prefix) for prefix in known_prefixes)
+                )
+            )
+            if should_replace_model:
+                self.model_name.setText(provider["default_model"])
+            self.update_provider_placeholders()
+            self.schedule_session_autosave()
+
+        def _connect_session_autosave(self) -> None:
+            for widget in (
+                self.dataset_path,
+                self.visualization_goal,
+                self.target_feature,
+                self.data_dimension,
+                self.data_type,
+                self.seeding_behavior,
+                self.density_preference,
+                self.constraints,
+                self.notes,
+                self.model_name,
+                self.api_base,
+                self.prompt_text,
+                self.code_text,
+            ):
+                widget.textChanged.connect(self.schedule_session_autosave)
+            for widget in (self.temperature, self.max_tokens, self.top_k):
+                widget.valueChanged.connect(self.schedule_session_autosave)
+            self.main_splitter.splitterMoved.connect(self.schedule_session_autosave)
+            self.workflow_tabs.currentChanged.connect(self.schedule_session_autosave)
+            self.viewport_tabs.currentChanged.connect(self.schedule_session_autosave)
+
+        def schedule_session_autosave(self, *_: Any) -> None:
+            if self.restoring_session:
+                return
+            self.session_autosave_timer.start()
+
+        def session_snapshot(self) -> dict[str, Any]:
+            prompt_text = self.prompt_text.toPlainText()
+            prompt_bundle = None
+            if self.prompt_bundle is not None:
+                prompt_bundle = self.prompt_bundle.to_dict()
+                prompt_bundle["final_prompt"] = prompt_text
+            return {
+                "app": "local_vtk_seeding_rag",
+                "dataset_path": self.dataset_path.text().strip(),
+                "dataset_metadata": self.metadata_payload(),
+                "request": self.current_request().to_dict(),
+                "llm_settings": {
+                    "provider": self.current_provider_id(),
+                    "model_name": self.model_name.text().strip(),
+                    "api_base": self.api_base.text().strip(),
+                    "temperature": float(self.temperature.value()),
+                    "max_tokens": int(self.max_tokens.value()),
+                    "top_k": int(self.top_k.value()),
+                },
+                "retrieval_payload": self.retrieval_payload,
+                "prompt_bundle": prompt_bundle,
+                "prompt_text": prompt_text,
+                "llm_response": self.llm_response,
+                "generated_code": self.code_text.toPlainText(),
+                "last_artifacts": self.last_artifacts.to_dict() if self.last_artifacts is not None else None,
+                "last_preview_png": self.last_preview_png,
+                "window_size": [self.width(), self.height()],
+                "splitter_sizes": self.main_splitter.sizes(),
+                "workflow_tab_index": self.workflow_tabs.currentIndex(),
+                "viewport_tab_index": self.viewport_tabs.currentIndex(),
+            }
+
+        def save_session(self) -> None:
+            if self.restoring_session:
+                return
+            try:
+                write_last_session(self.session_snapshot())
+            except Exception as exc:
+                print(f"[main] Could not save session: {exc}", file=sys.stderr, flush=True)
+
+        def restore_last_session(self) -> bool:
+            session = load_last_session()
+            if session is None:
+                return False
+
+            self.restoring_session = True
+            try:
+                self.dataset_path.setText(str(session.get("dataset_path") or ""))
+
+                request = session.get("request")
+                if not isinstance(request, dict):
+                    request = {}
+                self.visualization_goal.setPlainText(str(request.get("visualization_goal") or ""))
+                self.target_feature.setText(str(request.get("target_feature") or ""))
+                self.data_dimension.setText(str(request.get("data_dimension") or ""))
+                self.data_type.setText(str(request.get("data_type") or ""))
+                self.seeding_behavior.setPlainText(str(request.get("seeding_behavior") or ""))
+                self.density_preference.setText(str(request.get("density_clutter_preference") or ""))
+                self.constraints.setPlainText(str(request.get("constraints") or ""))
+                self.notes.setPlainText(str(request.get("notes") or ""))
+
+                settings = session.get("llm_settings")
+                if not isinstance(settings, dict):
+                    settings = {}
+                provider_id = str(settings.get("provider") or "")
+                if not provider_id:
+                    provider_id = _infer_provider_id_from_model(str(settings.get("model_name") or ""))
+                self.set_provider_id(provider_id)
+                if settings.get("model_name"):
+                    self.model_name.setText(str(settings["model_name"]))
+                self.api_base.setText(str(settings.get("api_base") or ""))
+                if settings.get("temperature") is not None:
+                    self.temperature.setValue(float(settings["temperature"]))
+                if settings.get("max_tokens") is not None:
+                    self.max_tokens.setValue(int(settings["max_tokens"]))
+                if settings.get("top_k") is not None:
+                    self.top_k.setValue(int(settings["top_k"]))
+
+                metadata = session.get("dataset_metadata")
+                if isinstance(metadata, dict) and metadata:
+                    self.dataset_metadata = metadata
+                    self.metadata_text.setPlainText(format_metadata_summary(metadata))
+                else:
+                    self.dataset_metadata = None
+                    self.metadata_text.clear()
+
+                retrieval_payload = session.get("retrieval_payload")
+                if isinstance(retrieval_payload, dict):
+                    self.retrieval_payload = retrieval_payload
+                    self.retrieval_text.setPlainText(_retrieval_summary(retrieval_payload))
+                else:
+                    self.retrieval_payload = None
+                    self.retrieval_text.clear()
+
+                prompt_bundle = session.get("prompt_bundle")
+                if isinstance(prompt_bundle, dict) and prompt_bundle.get("final_prompt"):
+                    selected_records = prompt_bundle.get("selected_records")
+                    self.prompt_bundle = PromptBundle(
+                        retrieval_query=str(prompt_bundle.get("retrieval_query") or ""),
+                        final_prompt=str(prompt_bundle.get("final_prompt") or ""),
+                        selected_records=selected_records if isinstance(selected_records, list) else [],
+                    )
+                    self.prompt_text.setPlainText(self.prompt_bundle.final_prompt)
+                else:
+                    self.prompt_bundle = None
+                    self.prompt_text.setPlainText(str(session.get("prompt_text") or ""))
+
+                self.llm_response = str(session.get("llm_response") or "")
+                self.generated_code = str(session.get("generated_code") or "")
+                self.code_text.setPlainText(self.generated_code)
+
+                artifact_payload = session.get("last_artifacts")
+                if isinstance(artifact_payload, dict):
+                    self.last_artifacts = RunArtifacts(
+                        run_dir=Path(str(artifact_payload.get("run_dir") or "")),
+                        prompt_path=Path(str(artifact_payload.get("prompt_path") or "")),
+                        retrieval_path=Path(str(artifact_payload.get("retrieval_path") or "")),
+                        metadata_path=Path(str(artifact_payload.get("metadata_path") or "")),
+                        llm_response_path=Path(str(artifact_payload.get("llm_response_path") or "")),
+                        code_path=Path(str(artifact_payload.get("code_path") or "")),
+                    )
+                else:
+                    self.last_artifacts = None
+
+                self.last_preview_png = str(session.get("last_preview_png") or "") or None
+                if self.last_preview_png and Path(self.last_preview_png).exists():
+                    try:
+                        self.show_preview_image(self.last_preview_png)
+                    except Exception as exc:
+                        print(f"[main] Could not restore preview image: {exc}", file=sys.stderr, flush=True)
+
+                window_size = session.get("window_size")
+                if isinstance(window_size, list) and len(window_size) == 2:
+                    self.resize(int(window_size[0]), int(window_size[1]))
+                splitter_sizes = session.get("splitter_sizes")
+                if isinstance(splitter_sizes, list) and splitter_sizes:
+                    self.main_splitter.setSizes([int(value) for value in splitter_sizes])
+                workflow_tab_index = session.get("workflow_tab_index")
+                if workflow_tab_index is not None:
+                    self.workflow_tabs.setCurrentIndex(int(workflow_tab_index))
+                viewport_tab_index = session.get("viewport_tab_index")
+                if viewport_tab_index is not None:
+                    self.viewport_tabs.setCurrentIndex(int(viewport_tab_index))
+            except Exception as exc:
+                print(f"[main] Could not restore previous session: {exc}", file=sys.stderr, flush=True)
+                self.set_status("Could not restore previous session")
+                return False
+            finally:
+                self.restoring_session = False
+
+            self.set_status("Restored previous session")
+            return True
 
         def viewport_process_running(self) -> bool:
             process = self.visualization_process
@@ -263,7 +560,7 @@ if GUI_IMPORT_ERROR is None:
             self.analyze_button.clicked.connect(self.analyze_dataset)
             layout.addWidget(self.analyze_button)
 
-            self.metadata_text = QTextEdit()
+            self.metadata_text = WheelScopedTextEdit()
             self.metadata_text.setReadOnly(True)
             self.metadata_text.setMinimumHeight(130)
             layout.addWidget(self.metadata_text)
@@ -272,22 +569,22 @@ if GUI_IMPORT_ERROR is None:
         def _request_group(self) -> QGroupBox:
             group = QGroupBox("Visualization Request")
             layout = QFormLayout(group)
-            self.visualization_goal = QTextEdit()
+            self.visualization_goal = WheelScopedTextEdit()
             self.visualization_goal.setPlaceholderText("What should the visualization show or help you understand?")
             self.visualization_goal.setMinimumHeight(72)
             self.target_feature = QLineEdit()
             self.target_feature.setPlaceholderText("vortices, critical points, high-entropy regions, boundaries...")
             self.data_dimension = QLineEdit()
             self.data_type = QLineEdit()
-            self.seeding_behavior = QTextEdit()
+            self.seeding_behavior = WheelScopedTextEdit()
             self.seeding_behavior.setPlaceholderText("Desired seeding technique or behavior")
             self.seeding_behavior.setMinimumHeight(72)
             self.density_preference = QLineEdit()
             self.density_preference.setPlaceholderText("dense, sparse, low clutter, even coverage...")
-            self.constraints = QTextEdit()
+            self.constraints = WheelScopedTextEdit()
             self.constraints.setPlaceholderText("Implementation constraints, important arrays, camera/view needs...")
             self.constraints.setMinimumHeight(72)
-            self.notes = QTextEdit()
+            self.notes = WheelScopedTextEdit()
             self.notes.setPlaceholderText("Additional notes")
             self.notes.setMinimumHeight(56)
 
@@ -304,12 +601,14 @@ if GUI_IMPORT_ERROR is None:
         def _llm_group(self) -> QGroupBox:
             group = QGroupBox("LLM")
             layout = QFormLayout(group)
-            self.model_name = QLineEdit("openai/gpt-5.4-mini")
+            self.provider_combo = QComboBox()
+            for provider in LLM_PROVIDER_OPTIONS:
+                self.provider_combo.addItem(provider["label"], provider["id"])
+            self.provider_combo.setCurrentIndex(self.provider_combo.findData(DEFAULT_LLM_PROVIDER_ID))
+            self.model_name = QLineEdit(LLM_PROVIDER_BY_ID[DEFAULT_LLM_PROVIDER_ID]["default_model"])
             self.api_key = QLineEdit()
             self.api_key.setEchoMode(QLineEdit.EchoMode.Password)
-            self.api_key.setPlaceholderText("Optional; environment variables also work")
             self.api_base = QLineEdit()
-            self.api_base.setPlaceholderText("Optional LiteLLM api_base")
             self.temperature = QDoubleSpinBox()
             self.temperature.setDecimals(2)
             self.temperature.setRange(0.0, 2.0)
@@ -322,7 +621,10 @@ if GUI_IMPORT_ERROR is None:
             self.top_k = QSpinBox()
             self.top_k.setRange(1, 20)
             self.top_k.setValue(5)
+            self.provider_combo.currentIndexChanged.connect(self.handle_provider_changed)
+            self.update_provider_placeholders()
 
+            layout.addRow("Provider", self.provider_combo)
             layout.addRow("Model", self.model_name)
             layout.addRow("API key", self.api_key)
             layout.addRow("API base", self.api_base)
@@ -355,10 +657,11 @@ if GUI_IMPORT_ERROR is None:
 
         def _tabs(self) -> QTabWidget:
             tabs = QTabWidget()
-            self.retrieval_text = QPlainTextEdit()
+            self.workflow_tabs = tabs
+            self.retrieval_text = WheelScopedPlainTextEdit()
             self.retrieval_text.setReadOnly(True)
-            self.prompt_text = QPlainTextEdit()
-            self.code_text = QPlainTextEdit()
+            self.prompt_text = WheelScopedPlainTextEdit()
+            self.code_text = WheelScopedPlainTextEdit()
             tabs.addTab(self.retrieval_text, "Retrieval")
             tabs.addTab(self.prompt_text, "Prompt")
             tabs.addTab(self.code_text, "Code")
@@ -381,7 +684,7 @@ if GUI_IMPORT_ERROR is None:
             interactive_panel = QWidget()
             interactive_layout = QVBoxLayout(interactive_panel)
             self.interactive_status_label = QLabel("No interactive viewport process running.")
-            self.viewport_log = QPlainTextEdit()
+            self.viewport_log = WheelScopedPlainTextEdit()
             self.viewport_log.setReadOnly(True)
             self.viewport_log.setPlaceholderText("Interactive viewport process output")
             interactive_layout.addWidget(self.interactive_status_label)
@@ -432,6 +735,7 @@ if GUI_IMPORT_ERROR is None:
                 if defaults["data_type"] and not self.data_type.text().strip():
                     self.data_type.setText(defaults["data_type"])
                 self.metadata_text.setPlainText(format_metadata_summary(metadata))
+                self.schedule_session_autosave()
 
             self.run_background_task(
                 message="Reading dataset metadata...",
@@ -461,6 +765,7 @@ if GUI_IMPORT_ERROR is None:
             self.retriever = retriever
             self.retrieval_payload = payload
             self.retrieval_text.setPlainText(_retrieval_summary(payload))
+            self.schedule_session_autosave()
 
         def apply_prompt_bundle(self, result: dict[str, Any]) -> None:
             retriever = result.get("retriever")
@@ -472,6 +777,7 @@ if GUI_IMPORT_ERROR is None:
                 self.retrieval_text.setPlainText(_retrieval_summary(retrieval_payload))
             self.prompt_bundle = result["prompt_bundle"]
             self.prompt_text.setPlainText(self.prompt_bundle.final_prompt)
+            self.schedule_session_autosave()
 
         def apply_llm_result(self, result: dict[str, Any]) -> None:
             self.apply_prompt_bundle(result)
@@ -576,6 +882,7 @@ if GUI_IMPORT_ERROR is None:
                 return
             settings = LLMSettings(
                 model=self.model_name.text().strip(),
+                provider=self.current_provider_id(),
                 api_key=self.api_key.text().strip(),
                 api_base=self.api_base.text().strip(),
                 temperature=float(self.temperature.value()),
@@ -603,7 +910,8 @@ if GUI_IMPORT_ERROR is None:
                         dataset_metadata=metadata,
                         retrieval_payload=retrieval_payload,
                     )
-                update_status(f"Calling LLM: waiting for response from {settings.model}...")
+                resolved_model = normalize_model_name(settings.model, settings.provider)
+                update_status(f"Calling LLM: waiting for response from {resolved_model}...")
                 response = generate_code(prompt_bundle.final_prompt, settings)
                 update_status("Extracting generated Python code...")
                 return {
@@ -829,12 +1137,14 @@ if GUI_IMPORT_ERROR is None:
                 llm_response=self.llm_response,
                 code=self.code_text.toPlainText(),
             )
+            self.schedule_session_autosave()
 
         def show_error(self, title: str, message: str) -> None:
             QMessageBox.critical(self, title, message)
             self.set_status(title)
 
         def closeEvent(self, event: Any) -> None:
+            self.save_session()
             self.close_existing_viewport_process()
             super().closeEvent(event)
 

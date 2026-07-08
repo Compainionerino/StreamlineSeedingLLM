@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any, Sequence
 
@@ -14,11 +15,68 @@ DEFAULT_MAX_TOKENS = 50000
 MAX_TOKEN_LIMIT = 200000
 DEFAULT_MAX_CONTINUATIONS = 2
 DEFAULT_REPAIR_ATTEMPTS = 2
+PROVIDER_MODEL_PREFIXES = {
+    "openai": "openai/",
+    "anthropic": "anthropic/",
+    "gemini": "gemini/",
+}
+PROVIDER_API_KEY_ENV_VARS = {
+    "openai": ("OPENAI_API_KEY",),
+    "anthropic": ("ANTHROPIC_API_KEY",),
+    "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+}
+PROVIDER_LABELS = {
+    "openai": "OpenAI",
+    "anthropic": "Anthropic",
+    "gemini": "Google Gemini",
+}
+
+
+def normalize_model_name(model: str, provider: str = "custom") -> str:
+    cleaned = model.strip()
+    prefix = PROVIDER_MODEL_PREFIXES.get(provider.strip().lower(), "")
+    if not cleaned or not prefix or "/" in cleaned:
+        return cleaned
+    return prefix + cleaned
+
+
+def provider_from_model_name(model: str) -> str | None:
+    cleaned = model.strip().lower()
+    for provider, prefix in PROVIDER_MODEL_PREFIXES.items():
+        if cleaned.startswith(prefix):
+            return provider
+    return None
+
+
+def _current_model_provider(settings: LLMSettings) -> str | None:
+    resolved_model = normalize_model_name(settings.model, settings.provider)
+    return provider_from_model_name(resolved_model)
+
+
+def _has_provider_api_key(provider: str, explicit_api_key: str = "") -> bool:
+    if explicit_api_key.strip():
+        return True
+    return any(os.environ.get(name) for name in PROVIDER_API_KEY_ENV_VARS.get(provider, ()))
+
+
+def _validate_api_key_for_current_model(settings: LLMSettings) -> None:
+    provider = _current_model_provider(settings)
+    if provider is None or _has_provider_api_key(provider, settings.api_key):
+        return
+
+    env_vars = PROVIDER_API_KEY_ENV_VARS.get(provider, ())
+    label = PROVIDER_LABELS.get(provider, provider)
+    resolved_model = normalize_model_name(settings.model, settings.provider)
+    raise LLMError(
+        f"{label} API key is required for the selected model {resolved_model!r}. "
+        f"Enter an API key in the LLM panel or set {' or '.join(env_vars)}."
+    )
 
 
 @dataclass(frozen=True)
 class LLMSettings:
     model: str
+    provider: str = "custom"
     api_key: str = ""
     api_base: str = ""
     temperature: float = 0.2
@@ -83,7 +141,7 @@ def _is_truncated(response: Any) -> bool:
 
 def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]) -> dict[str, Any]:
     kwargs: dict[str, Any] = {
-        "model": settings.model,
+        "model": normalize_model_name(settings.model, settings.provider),
         "messages": list(messages),
         "temperature": settings.temperature,
         "max_tokens": settings.max_tokens,
@@ -96,6 +154,7 @@ def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]
 
 
 def _call_completion(settings: LLMSettings, messages: Sequence[dict[str, str]]) -> Any:
+    _validate_api_key_for_current_model(settings)
     try:
         from litellm import completion  # type: ignore
     except ImportError as exc:
@@ -227,7 +286,7 @@ def generate_code(prompt: str, settings: LLMSettings) -> LLMResponse:
     return LLMResponse(
         content=content,
         code=code,
-        model=settings.model,
+        model=normalize_model_name(settings.model, settings.provider),
         finish_reason=_finish_reason(raw_response),
         continuation_count=continuation_count,
         repair_attempts=repair_attempts,
