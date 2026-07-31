@@ -1,0 +1,50 @@
+## Source:
+    kitchen.vtk
+## Ground Truth Visualisation
+
+![image](2026-07-24-10_01_45-ParaView6.1.1.png "500 Seed Points, Sphere seeding")
+![image](TestKitchen.png "500 Seed Points, Sphere seeding")
+
+
+
+## Features:
+- Flow towards vent
+- lower magnitude flow at bottom
+- Show the solid structures from the data correctly
+
+
+## Question:
+Should I provide the points for the surfaces? How much context for the dataset?
+
+## User Query for this Dataset
+
+**Visualization Goal:**
+    
+Visualize the flow of the field using Streamlines
+
+**Target Feature:**
+
+Explore the Datasets flow dynamics by using sufficient amounts of Streamlines. The Data is from a Kitchen with a vent, I want to see where the air is going
+
+
+**(Data dimension:)**
+    
+3D
+
+**Data Type:**
+    
+**(Seeding behaviour:)**
+
+Choose the seeding behaviour based on the suggested seeding strategies
+
+**Density/Clutter**
+
+Make sure that you use enough streamlines to show the flow, but don't use too many that the view is cluttered
+
+**Constraints**
+
+Dont use Streamtubes and opacity, just use streamlines instead.
+
+**Notes:**
+
+Please also consider that you can use a colormap for better visual clarity.

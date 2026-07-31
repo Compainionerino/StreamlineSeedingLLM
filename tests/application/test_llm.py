@@ -9,6 +9,7 @@ from contextlib import redirect_stdout
 from unittest.mock import patch
 
 from app.llm import (
+    BLABLADOR_API_BASE,
     DEFAULT_MAX_TOKENS,
     MAX_TOKEN_LIMIT,
     LLMError,
@@ -70,6 +71,10 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(
             normalize_model_name("anthropic/claude-sonnet-example", "anthropic"),
             "anthropic/claude-sonnet-example",
+        )
+        self.assertEqual(
+            normalize_model_name("alias-code", "blablador"),
+            "openai/alias-code",
         )
         self.assertEqual(normalize_model_name("local-model", "custom"), "local-model")
 
@@ -200,7 +205,7 @@ def create_visualization(dataset_path, metadata, user_request):
         fake = FakeLiteLLM([])
         sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
 
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {}, clear=True), patch("app.llm._windows_persistent_env_var", return_value=""):
             with self.assertRaises(LLMError) as context:
                 generate_code(
                     "make vtk code",
@@ -209,6 +214,79 @@ def create_visualization(dataset_path, metadata, user_request):
 
         self.assertIn("Google Gemini API key is required", str(context.exception))
         self.assertIn("gemini/gemini-test", str(context.exception))
+        self.assertEqual(fake.calls, [])
+
+    def test_blablador_provider_uses_env_key_and_default_api_base(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ]
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        with patch.dict(os.environ, {"BLABLADOR_API_KEY": "blablador-secret"}, clear=True):
+            response = generate_code(
+                "make vtk code",
+                LLMSettings(model="alias-code", provider="blablador", repair_attempts=0),
+            )
+
+        self.assertEqual(response.model, "openai/alias-code")
+        self.assertEqual(fake.calls[0]["model"], "openai/alias-code")
+        self.assertEqual(fake.calls[0]["api_key"], "blablador-secret")
+        self.assertEqual(fake.calls[0]["api_base"], BLABLADOR_API_BASE)
+
+    def test_blablador_provider_accepts_double_o_env_key_alias(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ]
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        with patch.dict(os.environ, {"BLABLADOOR_API_KEY": "double-o-secret"}, clear=True), patch(
+            "app.llm._windows_persistent_env_var", return_value=""
+        ):
+            response = generate_code(
+                "make vtk code",
+                LLMSettings(model="alias-code", provider="blablador", repair_attempts=0),
+            )
+
+        self.assertEqual(response.model, "openai/alias-code")
+        self.assertEqual(fake.calls[0]["api_key"], "double-o-secret")
+
+    def test_missing_blablador_key_mentions_blablador_env_var(self) -> None:
+        fake = FakeLiteLLM([])
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        with patch.dict(os.environ, {}, clear=True), patch("app.llm._windows_persistent_env_var", return_value=""):
+            with self.assertRaises(LLMError) as context:
+                generate_code(
+                    "make vtk code",
+                    LLMSettings(model="alias-code", provider="blablador", repair_attempts=0),
+                )
+
+        self.assertIn("Blablador API key is required", str(context.exception))
+        self.assertIn("openai/alias-code", str(context.exception))
+        self.assertIn("BLABLADOR_API_KEY", str(context.exception))
+        self.assertIn("BLABLADOOR_API_KEY", str(context.exception))
         self.assertEqual(fake.calls, [])
 
     def test_generate_code_continues_truncated_response(self) -> None:

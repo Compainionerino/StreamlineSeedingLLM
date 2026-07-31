@@ -11,7 +11,14 @@ from rag.retrieval import HybridRetriever
 from .code_validation import validate_generated_code
 from .dataset_metadata import extract_dataset_metadata, format_metadata_summary
 from .interactive_execution import cleanup_interactive_payload, prepare_interactive_viewport_launch
-from .llm import DEFAULT_MAX_TOKENS, MAX_TOKEN_LIMIT, LLMSettings, generate_code, normalize_model_name
+from .llm import (
+    BLABLADOR_API_BASE,
+    DEFAULT_MAX_TOKENS,
+    MAX_TOKEN_LIMIT,
+    LLMSettings,
+    generate_code,
+    normalize_model_name,
+)
 from .prompting import PromptBundle, build_final_prompt
 from .query import UserRequest, build_retrieval_query, infer_request_defaults_from_metadata
 from .run_store import RunArtifacts, write_run_artifacts
@@ -82,6 +89,15 @@ LLM_PROVIDER_OPTIONS: tuple[dict[str, str], ...] = (
         "model_prefix": "gemini/",
         "api_key_placeholder": "Optional Gemini API key; GEMINI_API_KEY or GOOGLE_API_KEY also works",
         "api_base_placeholder": "Optional Gemini-compatible api_base",
+    },
+    {
+        "id": "blablador",
+        "label": "Blablador",
+        "default_model": "alias-code",
+        "model_prefix": "openai/",
+        "api_key_placeholder": "Optional Blablador token; BLABLADOR_API_KEY also works",
+        "api_base_placeholder": f"Default: {BLABLADOR_API_BASE}",
+        "always_use_default_on_switch": "true",
     },
     {
         "id": "custom",
@@ -282,7 +298,8 @@ if GUI_IMPORT_ERROR is None:
             should_replace_model = (
                 provider["id"] != "custom"
                 and (
-                    not previous_model
+                    provider.get("always_use_default_on_switch") == "true"
+                    or not previous_model
                     or previous_model in known_defaults
                     or any(previous_model.startswith(prefix) for prefix in known_prefixes)
                 )

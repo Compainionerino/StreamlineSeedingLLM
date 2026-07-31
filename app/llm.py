@@ -15,20 +15,30 @@ DEFAULT_MAX_TOKENS = 50000
 MAX_TOKEN_LIMIT = 200000
 DEFAULT_MAX_CONTINUATIONS = 2
 DEFAULT_REPAIR_ATTEMPTS = 2
+BLABLADOR_API_BASE = "https://api.blablador.fz-juelich.de/v1/"
 PROVIDER_MODEL_PREFIXES = {
     "openai": "openai/",
     "anthropic": "anthropic/",
     "gemini": "gemini/",
+    "blablador": "openai/",
 }
 PROVIDER_API_KEY_ENV_VARS = {
     "openai": ("OPENAI_API_KEY",),
     "anthropic": ("ANTHROPIC_API_KEY",),
     "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    "blablador": ("BLABLADOR_API_KEY", "BLABLADOOR_API_KEY"),
 }
 PROVIDER_LABELS = {
     "openai": "OpenAI",
     "anthropic": "Anthropic",
     "gemini": "Google Gemini",
+    "blablador": "Blablador",
+}
+PROVIDER_DEFAULT_API_BASES = {
+    "blablador": BLABLADOR_API_BASE,
+}
+PROVIDER_ENV_API_KEY_FOR_COMPLETION = {
+    "blablador",
 }
 
 
@@ -49,14 +59,51 @@ def provider_from_model_name(model: str) -> str | None:
 
 
 def _current_model_provider(settings: LLMSettings) -> str | None:
+    selected_provider = settings.provider.strip().lower()
+    if selected_provider == "blablador":
+        return selected_provider
     resolved_model = normalize_model_name(settings.model, settings.provider)
     return provider_from_model_name(resolved_model)
+
+
+def _windows_persistent_env_var(name: str) -> str:
+    if os.name != "nt":
+        return ""
+    try:
+        import winreg
+    except ImportError:
+        return ""
+
+    locations = (
+        (winreg.HKEY_CURRENT_USER, r"Environment"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+    )
+    for root, path in locations:
+        try:
+            with winreg.OpenKey(root, path) as key:
+                value, _ = winreg.QueryValueEx(key, name)
+        except OSError:
+            continue
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def _provider_env_api_key(provider: str) -> str:
+    for name in PROVIDER_API_KEY_ENV_VARS.get(provider, ()):
+        value = os.environ.get(name)
+        if value:
+            return value
+        value = _windows_persistent_env_var(name)
+        if value:
+            return value
+    return ""
 
 
 def _has_provider_api_key(provider: str, explicit_api_key: str = "") -> bool:
     if explicit_api_key.strip():
         return True
-    return any(os.environ.get(name) for name in PROVIDER_API_KEY_ENV_VARS.get(provider, ()))
+    return bool(_provider_env_api_key(provider))
 
 
 def _validate_api_key_for_current_model(settings: LLMSettings) -> None:
@@ -292,6 +339,7 @@ def _print_token_usage_summary(
 
 
 def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]) -> dict[str, Any]:
+    selected_provider = settings.provider.strip().lower()
     kwargs: dict[str, Any] = {
         "model": normalize_model_name(settings.model, settings.provider),
         "messages": list(messages),
@@ -300,8 +348,14 @@ def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]
     }
     if settings.api_key:
         kwargs["api_key"] = settings.api_key
-    if settings.api_base:
-        kwargs["api_base"] = settings.api_base
+    elif selected_provider in PROVIDER_ENV_API_KEY_FOR_COMPLETION:
+        env_api_key = _provider_env_api_key(selected_provider)
+        if env_api_key:
+            kwargs["api_key"] = env_api_key
+
+    api_base = settings.api_base.strip() or PROVIDER_DEFAULT_API_BASES.get(selected_provider, "")
+    if api_base:
+        kwargs["api_base"] = api_base
     return kwargs
 
 

@@ -4,6 +4,10 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-local/
+local/*
+!local/datasets/
+local/datasets/*
+!local/datasets/feature annotations/
+!local/datasets/feature annotations/**
 data/
 runs/

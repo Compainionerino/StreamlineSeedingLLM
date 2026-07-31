@@ -102,7 +102,7 @@ The app provides:
 - VTK-native dataset metadata extraction for `.vtk`, `.vti`, `.vtu`, `.vtp`, `.vts`, and `.vtr`
 - local retrieval over the existing seeding index
 - final prompt assembly from dataset metadata, user intent, and selected structured record fields
-- LiteLLM-based provider/model switching for code generation, including OpenAI, Anthropic, Gemini, and custom LiteLLM-compatible endpoints
+- LiteLLM-based provider/model switching for code generation, including OpenAI, Anthropic, Gemini, Blablador, and custom LiteLLM-compatible endpoints
 - default code generation with `openai/gpt-5.4-mini`, a 50,000 token output budget adjustable up to 200,000 tokens, automatic continuation on truncation, and two validation-repair attempts
 - compact terminal logging of each LLM call stack, including finish reasons, provider-reported input/output token counts, and aggregate token totals when available
 - explicit confirmation before generated VTK code is executed
@@ -124,6 +124,22 @@ Generated prompts, retrieval snapshots, LLM responses, and code are stored under
 Autosaved and manually saved GUI sessions are stored locally under ignored `local/sessions/`. API keys are not saved.
 
 In the LLM panel, choose a provider and enter the matching API key, or leave the key field empty when the provider-specific environment variable is already set. The app only checks the API key for the currently selected/resolved model provider. The model field remains editable, so any LiteLLM model string supported by your installed LiteLLM version can be used.
+
+For Blablador, choose the `Blablador` provider. The default model is `alias-code`, and the app uses Blablador's OpenAI-compatible endpoint at `https://api.blablador.fz-juelich.de/v1/` unless you enter a custom API base. To provide the token through PowerShell for the current terminal session:
+
+```powershell
+$env:BLABLADOR_API_KEY = "your-blablador-token"
+```
+
+To persist it for future PowerShell sessions:
+
+```powershell
+[Environment]::SetEnvironmentVariable("BLABLADOR_API_KEY", "your-blablador-token", "User")
+```
+
+The current-session form only works for apps launched from that same PowerShell process after setting the variable. On Windows, the app also checks persistent User/Machine environment variables directly, so the persistent form is usually less fragile. The canonical spelling is `BLABLADOR_API_KEY`; `BLABLADOOR_API_KEY` is also accepted as a compatibility alias.
+
+The token is the Helmholtz Codebase personal access token described in the Blablador API guide: https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/
 
 ## Evaluation
 
