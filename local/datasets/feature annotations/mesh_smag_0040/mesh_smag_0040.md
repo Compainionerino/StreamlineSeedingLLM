@@ -8,6 +8,7 @@
 
 ## Features:
 - Coloring
+- Streamlines drawn correctly
 
 
 ## User Query for this Dataset
