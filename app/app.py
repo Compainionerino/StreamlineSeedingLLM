@@ -1,7 +1,9 @@
 ﻿from __future__ import annotations
 
 import json
+import shutil
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -32,6 +34,7 @@ from .safe_execution import SafeExecutionResult, run_generated_code_safely
 from .session_store import (
     DEFAULT_SESSION_ROOT,
     default_manual_session_path,
+    default_viewport_image_path,
     load_last_session,
     load_session,
     write_last_session,
@@ -45,6 +48,7 @@ try:
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QApplication,
+        QCheckBox,
         QFileDialog,
         QFormLayout,
         QGroupBox,
@@ -130,7 +134,13 @@ def _pretty_json(payload: Any) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+def _utc_timestamp() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
 def _retrieval_summary(payload: dict[str, Any]) -> str:
+    if payload.get("rag_enabled") is False:
+        return "RAG retrieval disabled for this session.\n\nNo retrieved seeding records were used."
     lines = [
         f"Query tags: {_pretty_json(payload.get('query_tags', {}))}",
         "",
@@ -160,6 +170,16 @@ if GUI_IMPORT_ERROR is None:
         def wheelEvent(self, event: Any) -> None:
             super().wheelEvent(event)
             event.accept()
+
+
+    class WheelNeutralSpinBox(QSpinBox):
+        def wheelEvent(self, event: Any) -> None:
+            event.ignore()
+
+
+    class WheelNeutralDoubleSpinBox(QDoubleSpinBox):
+        def wheelEvent(self, event: Any) -> None:
+            event.ignore()
 
 
     class TaskSignals(QObject):
@@ -199,6 +219,8 @@ if GUI_IMPORT_ERROR is None:
             self.llm_response: str = ""
             self.last_artifacts: RunArtifacts | None = None
             self.last_preview_png: str | None = None
+            self.experiment_viewport_image: dict[str, Any] | None = None
+            self.experiment_viewport_image_source_path: str | None = None
             self.visualization_process: QProcess | None = None
             self.visualization_payload_dir: str | None = None
             self.thread_pool = QThreadPool.globalInstance()
@@ -254,7 +276,6 @@ if GUI_IMPORT_ERROR is None:
             for button in (
                 getattr(self, "browse_button", None),
                 getattr(self, "analyze_button", None),
-                getattr(self, "retrieve_button", None),
                 getattr(self, "build_prompt_button", None),
                 getattr(self, "generate_button", None),
                 getattr(self, "run_button", None),
@@ -263,6 +284,8 @@ if GUI_IMPORT_ERROR is None:
             ):
                 if button is not None:
                     button.setEnabled(enabled)
+            if getattr(self, "retrieve_button", None) is not None:
+                self.retrieve_button.setEnabled(enabled and self.rag_enabled())
             if getattr(self, "stop_viewport_button", None) is not None:
                 self.stop_viewport_button.setEnabled(self.viewport_process_running())
 
@@ -291,6 +314,49 @@ if GUI_IMPORT_ERROR is None:
                 index = self.query_mode_combo.findData(DEFAULT_QUERY_MODE)
             if index >= 0:
                 self.query_mode_combo.setCurrentIndex(index)
+
+        def rag_enabled(self) -> bool:
+            return self.use_rag_checkbox.isChecked()
+
+        def disabled_rag_payload(self, retrieval_query: str = "") -> dict[str, Any]:
+            return {
+                "rag_enabled": False,
+                "retrieval_query": retrieval_query,
+                "query_tags": {},
+                "results": [],
+            }
+
+        def current_retrieval_payload_for_rag_state(self) -> dict[str, Any] | None:
+            payload = self.retrieval_payload
+            if not isinstance(payload, dict):
+                return None
+            payload_rag_enabled = payload.get("rag_enabled", True) is not False
+            if payload_rag_enabled == self.rag_enabled():
+                return payload
+            return None
+
+        def current_prompt_bundle_for_rag_state(self) -> PromptBundle | None:
+            if self.prompt_bundle is None:
+                return None
+            if self.prompt_bundle.rag_enabled == self.rag_enabled():
+                return self.prompt_bundle
+            return None
+
+        def handle_rag_toggled(self, *_: Any) -> None:
+            if self.restoring_session:
+                return
+            self.prompt_bundle = None
+            self.retrieval_payload = None
+            if self.rag_enabled():
+                self.retrieval_text.clear()
+                self.set_status("RAG retrieval enabled")
+            else:
+                retrieval_query = build_retrieval_query(self.current_request(), self.metadata_payload())
+                self.retrieval_payload = self.disabled_rag_payload(retrieval_query)
+                self.retrieval_text.setPlainText(_retrieval_summary(self.retrieval_payload))
+                self.set_status("RAG retrieval disabled")
+            self.retrieve_button.setEnabled(not self.busy and self.rag_enabled())
+            self.schedule_session_autosave()
 
         def current_provider_option(self) -> dict[str, str]:
             return LLM_PROVIDER_BY_ID.get(self.current_provider_id(), LLM_PROVIDER_BY_ID["custom"])
@@ -343,11 +409,23 @@ if GUI_IMPORT_ERROR is None:
                 self.api_base,
                 self.prompt_text,
                 self.code_text,
+                self.experiment_feature_notes,
+                self.experiment_seeding_notes,
             ):
                 widget.textChanged.connect(self.schedule_session_autosave)
-            for widget in (self.temperature, self.max_tokens, self.top_k):
+            for widget in (
+                self.temperature,
+                self.max_tokens,
+                self.top_k,
+                self.experiment_attempts,
+                self.experiment_features_recognized,
+                self.experiment_seeding_score,
+            ):
                 widget.valueChanged.connect(self.schedule_session_autosave)
             self.query_mode_combo.currentIndexChanged.connect(self.schedule_session_autosave)
+            self.use_rag_checkbox.stateChanged.connect(self.handle_rag_toggled)
+            self.experiment_colormap_used.stateChanged.connect(self.schedule_session_autosave)
+            self.experiment_suggested_seeding_used.stateChanged.connect(self.schedule_session_autosave)
             self.main_splitter.splitterMoved.connect(self.schedule_session_autosave)
             self.workflow_tabs.currentChanged.connect(self.schedule_session_autosave)
             self.viewport_tabs.currentChanged.connect(self.schedule_session_autosave)
@@ -356,6 +434,134 @@ if GUI_IMPORT_ERROR is None:
             if self.restoring_session:
                 return
             self.session_autosave_timer.start()
+
+        def experiment_snapshot(self) -> dict[str, Any]:
+            payload: dict[str, Any] = {
+                "attempts": int(self.experiment_attempts.value()),
+                "features_recognized": int(self.experiment_features_recognized.value()),
+                "feature_notes": self.experiment_feature_notes.toPlainText(),
+                "colormap_used": self.experiment_colormap_used.isChecked(),
+                "suggested_seeding_used": self.experiment_suggested_seeding_used.isChecked(),
+                "seeding_score": int(self.experiment_seeding_score.value()),
+                "seeding_notes": self.experiment_seeding_notes.toPlainText(),
+                "viewport_image": None,
+            }
+            if self.experiment_viewport_image is not None:
+                payload["viewport_image"] = dict(self.experiment_viewport_image)
+            return payload
+
+        def restore_experiment_payload(
+            self,
+            payload: Any,
+            session_path: str | Path | None = None,
+        ) -> None:
+            if not isinstance(payload, dict):
+                payload = {}
+
+            def int_value(key: str) -> int:
+                try:
+                    return int(payload.get(key) or 0)
+                except (TypeError, ValueError):
+                    return 0
+
+            self.experiment_attempts.setValue(int_value("attempts"))
+            self.experiment_features_recognized.setValue(int_value("features_recognized"))
+            self.experiment_feature_notes.setPlainText(str(payload.get("feature_notes") or ""))
+            self.experiment_colormap_used.setChecked(bool(payload.get("colormap_used", False)))
+            self.experiment_suggested_seeding_used.setChecked(bool(payload.get("suggested_seeding_used", False)))
+            self.experiment_seeding_score.setValue(int_value("seeding_score"))
+            self.experiment_seeding_notes.setPlainText(str(payload.get("seeding_notes") or ""))
+
+            image_payload = payload.get("viewport_image")
+            if isinstance(image_payload, dict):
+                self.experiment_viewport_image = dict(image_payload)
+                self.experiment_viewport_image_source_path = self.resolve_experiment_viewport_image_path(
+                    image_payload,
+                    session_path,
+                )
+            else:
+                self.experiment_viewport_image = None
+                self.experiment_viewport_image_source_path = None
+            self.update_experiment_viewport_image_label()
+
+        def resolve_experiment_viewport_image_path(
+            self,
+            image_payload: dict[str, Any],
+            session_path: str | Path | None = None,
+        ) -> str | None:
+            path_value = str(image_payload.get("path") or "")
+            candidates: list[Path] = []
+            if path_value:
+                path = Path(path_value)
+                if path.is_absolute():
+                    candidates.append(path)
+                elif session_path:
+                    candidates.append(Path(session_path).parent / path)
+            absolute_path = str(image_payload.get("absolute_path") or "")
+            if absolute_path:
+                candidates.append(Path(absolute_path))
+            for candidate in candidates:
+                if candidate.exists():
+                    return str(candidate)
+            return None
+
+        def update_experiment_viewport_image_label(self) -> None:
+            label = getattr(self, "experiment_viewport_image_label", None)
+            if label is None:
+                return
+            if self.experiment_viewport_image is None:
+                label.setText("No viewport image associated.")
+                label.setToolTip("")
+                return
+            path_text = str(self.experiment_viewport_image.get("path") or "Viewport image associated.")
+            if self.experiment_viewport_image_source_path:
+                label.setText(path_text)
+                label.setToolTip(self.experiment_viewport_image_source_path)
+            else:
+                label.setText(f"{path_text} (missing)")
+                label.setToolTip("")
+
+        def viewport_image_source_path(self) -> tuple[str, str] | None:
+            if self.last_preview_png and Path(self.last_preview_png).exists():
+                return self.last_preview_png, "safe_preview"
+            if self.experiment_viewport_image_source_path and Path(self.experiment_viewport_image_source_path).exists():
+                return self.experiment_viewport_image_source_path, "associated_viewport_image"
+            return None
+
+        def attach_viewport_image_to_snapshot(
+            self,
+            snapshot: dict[str, Any],
+            session_path: str | Path,
+        ) -> None:
+            experiment = snapshot.get("experiment")
+            if not isinstance(experiment, dict):
+                experiment = {}
+                snapshot["experiment"] = experiment
+
+            source = self.viewport_image_source_path()
+            if source is None:
+                experiment["viewport_image"] = None
+                self.experiment_viewport_image = None
+                self.experiment_viewport_image_source_path = None
+                self.update_experiment_viewport_image_label()
+                return
+
+            source_path, source_label = source
+            target_path = default_viewport_image_path(session_path)
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            if Path(source_path).resolve() != target_path.resolve():
+                shutil.copy2(source_path, target_path)
+
+            image_payload = {
+                "path": target_path.name,
+                "absolute_path": str(target_path.resolve()),
+                "source": source_label,
+                "captured_at": _utc_timestamp(),
+            }
+            experiment["viewport_image"] = image_payload
+            self.experiment_viewport_image = image_payload
+            self.experiment_viewport_image_source_path = str(target_path)
+            self.update_experiment_viewport_image_label()
 
         def session_snapshot(self) -> dict[str, Any]:
             prompt_text = self.prompt_text.toPlainText()
@@ -368,6 +574,10 @@ if GUI_IMPORT_ERROR is None:
                 "dataset_path": self.dataset_path.text().strip(),
                 "dataset_metadata": self.metadata_payload(),
                 "request": self.current_request().to_dict(),
+                "rag": {
+                    "enabled": self.rag_enabled(),
+                },
+                "experiment": self.experiment_snapshot(),
                 "llm_settings": {
                     "provider": self.current_provider_id(),
                     "model_name": self.model_name.text().strip(),
@@ -413,6 +623,7 @@ if GUI_IMPORT_ERROR is None:
             *,
             success_status: str,
             error_status: str,
+            session_path: str | Path | None = None,
         ) -> bool:
             self.session_autosave_timer.stop()
             self.restoring_session = True
@@ -423,6 +634,11 @@ if GUI_IMPORT_ERROR is None:
                 if not isinstance(request, dict):
                     request = {}
                 self.set_query_mode(str(request.get("query_mode") or DEFAULT_QUERY_MODE))
+                rag_settings = session.get("rag")
+                rag_enabled = True
+                if isinstance(rag_settings, dict) and rag_settings.get("enabled") is not None:
+                    rag_enabled = bool(rag_settings["enabled"])
+                self.use_rag_checkbox.setChecked(rag_enabled)
                 self.visualization_goal.setPlainText(str(request.get("visualization_goal") or ""))
                 self.target_feature.setText(str(request.get("target_feature") or ""))
                 self.data_dimension.setText(str(request.get("data_dimension") or ""))
@@ -431,6 +647,7 @@ if GUI_IMPORT_ERROR is None:
                 self.density_preference.setText(str(request.get("density_clutter_preference") or ""))
                 self.constraints.setPlainText(str(request.get("constraints") or ""))
                 self.notes.setPlainText(str(request.get("notes") or ""))
+                self.restore_experiment_payload(session.get("experiment"), session_path)
 
                 settings = session.get("llm_settings")
                 if not isinstance(settings, dict):
@@ -468,10 +685,18 @@ if GUI_IMPORT_ERROR is None:
                 prompt_bundle = session.get("prompt_bundle")
                 if isinstance(prompt_bundle, dict) and prompt_bundle.get("final_prompt"):
                     selected_records = prompt_bundle.get("selected_records")
+                    prompt_rag_enabled = prompt_bundle.get("rag_enabled")
+                    if not isinstance(prompt_rag_enabled, bool):
+                        prompt_rag_enabled = (
+                            retrieval_payload.get("rag_enabled", True) is not False
+                            if isinstance(retrieval_payload, dict)
+                            else True
+                        )
                     self.prompt_bundle = PromptBundle(
                         retrieval_query=str(prompt_bundle.get("retrieval_query") or ""),
                         final_prompt=str(prompt_bundle.get("final_prompt") or ""),
                         selected_records=selected_records if isinstance(selected_records, list) else [],
+                        rag_enabled=prompt_rag_enabled,
                     )
                     self.prompt_text.setPlainText(self.prompt_bundle.final_prompt)
                 else:
@@ -525,6 +750,7 @@ if GUI_IMPORT_ERROR is None:
                 self.restoring_session = False
 
             self.set_status(success_status)
+            self.retrieve_button.setEnabled(not self.busy and self.rag_enabled())
             return True
 
         def save_manual_session(self) -> None:
@@ -535,11 +761,15 @@ if GUI_IMPORT_ERROR is None:
             request = snapshot.get("request")
             if not isinstance(request, dict):
                 request = {}
+            rag = snapshot.get("rag")
+            if not isinstance(rag, dict):
+                rag = {}
             DEFAULT_SESSION_ROOT.mkdir(parents=True, exist_ok=True)
             default_path = default_manual_session_path(
                 snapshot.get("dataset_path"),
                 model_name=str(settings.get("model_name") or ""),
                 query_mode=str(request.get("query_mode") or ""),
+                rag_enabled=bool(rag.get("enabled", True)),
             )
             path, _ = QFileDialog.getSaveFileName(
                 self,
@@ -550,6 +780,7 @@ if GUI_IMPORT_ERROR is None:
             if not path:
                 return
             try:
+                self.attach_viewport_image_to_snapshot(snapshot, path)
                 saved_path = write_manual_session(snapshot, path)
                 write_last_session(snapshot)
             except Exception as exc:
@@ -590,6 +821,7 @@ if GUI_IMPORT_ERROR is None:
                 session,
                 success_status=f"Loaded session: {Path(path).name}",
                 error_status="Session load failed",
+                session_path=path,
             )
             if loaded:
                 self.save_session()
@@ -703,6 +935,8 @@ if GUI_IMPORT_ERROR is None:
             self.query_mode_combo = QComboBox()
             for query_mode in QUERY_MODES:
                 self.query_mode_combo.addItem(query_mode, query_mode)
+            self.use_rag_checkbox = QCheckBox("Use RAG")
+            self.use_rag_checkbox.setChecked(True)
             self.visualization_goal = WheelScopedTextEdit()
             self.visualization_goal.setPlaceholderText("What should the visualization show or help you understand?")
             self.visualization_goal.setMinimumHeight(72)
@@ -723,6 +957,7 @@ if GUI_IMPORT_ERROR is None:
             self.notes.setMinimumHeight(56)
 
             layout.addRow("Query mode", self.query_mode_combo)
+            layout.addRow("RAG", self.use_rag_checkbox)
             layout.addRow("Visualisation goal", self.visualization_goal)
             layout.addRow("Target feature", self.target_feature)
             layout.addRow("Data dimension", self.data_dimension)
@@ -744,16 +979,16 @@ if GUI_IMPORT_ERROR is None:
             self.api_key = QLineEdit()
             self.api_key.setEchoMode(QLineEdit.EchoMode.Password)
             self.api_base = QLineEdit()
-            self.temperature = QDoubleSpinBox()
+            self.temperature = WheelNeutralDoubleSpinBox()
             self.temperature.setDecimals(2)
             self.temperature.setRange(0.0, 2.0)
             self.temperature.setSingleStep(0.05)
             self.temperature.setValue(0.2)
-            self.max_tokens = QSpinBox()
+            self.max_tokens = WheelNeutralSpinBox()
             self.max_tokens.setRange(512, MAX_TOKEN_LIMIT)
             self.max_tokens.setSingleStep(512)
             self.max_tokens.setValue(DEFAULT_MAX_TOKENS)
-            self.top_k = QSpinBox()
+            self.top_k = WheelNeutralSpinBox()
             self.top_k.setRange(1, 20)
             self.top_k.setValue(5)
             self.provider_combo.currentIndexChanged.connect(self.handle_provider_changed)
@@ -808,8 +1043,38 @@ if GUI_IMPORT_ERROR is None:
             tabs.addTab(self.retrieval_text, "Retrieval")
             tabs.addTab(self.prompt_text, "Prompt")
             tabs.addTab(self.code_text, "Code")
+            tabs.addTab(self._experiment_tab(), "Experiment")
             tabs.setMinimumHeight(320)
             return tabs
+
+        def _experiment_tab(self) -> QWidget:
+            tab = QWidget()
+            layout = QFormLayout(tab)
+
+            self.experiment_attempts = QSpinBox()
+            self.experiment_attempts.setRange(0, 100000)
+            self.experiment_features_recognized = QSpinBox()
+            self.experiment_features_recognized.setRange(0, 100000)
+            self.experiment_feature_notes = WheelScopedPlainTextEdit()
+            self.experiment_feature_notes.setMinimumHeight(72)
+            self.experiment_colormap_used = QCheckBox()
+            self.experiment_suggested_seeding_used = QCheckBox()
+            self.experiment_seeding_score = QSpinBox()
+            self.experiment_seeding_score.setRange(0, 100)
+            self.experiment_seeding_notes = WheelScopedPlainTextEdit()
+            self.experiment_seeding_notes.setMinimumHeight(72)
+            self.experiment_viewport_image_label = QLabel("No viewport image associated.")
+            self.experiment_viewport_image_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+
+            layout.addRow("Attempts", self.experiment_attempts)
+            layout.addRow("Amount of Features Recognized", self.experiment_features_recognized)
+            layout.addRow("Notes about Features", self.experiment_feature_notes)
+            layout.addRow("Colormap used", self.experiment_colormap_used)
+            layout.addRow("Suggested Seeding used", self.experiment_suggested_seeding_used)
+            layout.addRow("Seeding Score", self.experiment_seeding_score)
+            layout.addRow("Notes about Seeding Strategy", self.experiment_seeding_notes)
+            layout.addRow("Viewport image", self.experiment_viewport_image_label)
+            return tab
 
         def _build_viewport_panel(self) -> QWidget:
             panel = QWidget()
@@ -941,6 +1206,9 @@ if GUI_IMPORT_ERROR is None:
         def apply_safe_execution_result(self, result: SafeExecutionResult) -> None:
             self.generated_code = self.code_text.toPlainText().strip()
             self.last_preview_png = result.output_png
+            self.experiment_viewport_image = None
+            self.experiment_viewport_image_source_path = None
+            self.update_experiment_viewport_image_label()
             self.show_preview_image(result.output_png)
             self.save_run_artifacts()
             self.launch_interactive_viewport()
@@ -958,6 +1226,15 @@ if GUI_IMPORT_ERROR is None:
 
         def retrieve_records(self) -> None:
             request = self.current_request()
+            if not self.rag_enabled():
+                retrieval_query = build_retrieval_query(request, self.metadata_payload())
+                self.retrieval_payload = self.disabled_rag_payload(retrieval_query)
+                self.prompt_bundle = None
+                self.retrieval_text.setPlainText(_retrieval_summary(self.retrieval_payload))
+                self.schedule_session_autosave()
+                self.set_status("RAG retrieval disabled; no retrieval performed")
+                return
+
             retrieval_query = build_retrieval_query(request, self.metadata_payload())
             if not retrieval_query:
                 self.show_error("Missing request", "Fill in at least one visualization request field.")
@@ -984,24 +1261,28 @@ if GUI_IMPORT_ERROR is None:
             if not retrieval_query:
                 self.show_error("Missing request", "Fill in at least one visualization request field.")
                 return
+            rag_enabled = self.rag_enabled()
             top_k = self.top_k.value()
-            current_payload = self.retrieval_payload
+            current_payload = self.current_retrieval_payload_for_rag_state()
 
             def work(update_status: Callable[[str], None]) -> dict[str, Any]:
-                retriever: HybridRetriever | None = self.retriever
+                retriever: HybridRetriever | None = self.retriever if rag_enabled else None
                 retrieval_payload = current_payload
-                if retrieval_payload is None:
+                if rag_enabled and retrieval_payload is None:
                     retriever, retrieval_payload = self.retrieve_payload_for_request(
                         request,
                         metadata,
                         top_k,
                         update_status,
                     )
-                update_status("Combining request, metadata, and retrieved records into final prompt...")
+                if not rag_enabled:
+                    retrieval_payload = self.disabled_rag_payload(retrieval_query)
+                update_status("Combining request, metadata, and retrieval settings into final prompt...")
                 prompt_bundle = build_final_prompt(
                     user_request=request,
                     dataset_metadata=metadata,
                     retrieval_payload=retrieval_payload,
+                    rag_enabled=rag_enabled,
                 )
                 return {
                     "retriever": retriever,
@@ -1032,27 +1313,31 @@ if GUI_IMPORT_ERROR is None:
                 temperature=float(self.temperature.value()),
                 max_tokens=int(self.max_tokens.value()),
             )
-            current_payload = self.retrieval_payload
-            current_bundle = self.prompt_bundle
+            rag_enabled = self.rag_enabled()
+            current_payload = self.current_retrieval_payload_for_rag_state()
+            current_bundle = self.current_prompt_bundle_for_rag_state()
             top_k = self.top_k.value()
 
             def work(update_status: Callable[[str], None]) -> dict[str, Any]:
-                retriever: HybridRetriever | None = self.retriever
+                retriever: HybridRetriever | None = self.retriever if rag_enabled else None
                 retrieval_payload = current_payload
                 prompt_bundle = current_bundle
                 if prompt_bundle is None:
-                    if retrieval_payload is None:
+                    if rag_enabled and retrieval_payload is None:
                         retriever, retrieval_payload = self.retrieve_payload_for_request(
                             request,
                             metadata,
                             top_k,
                             update_status,
                         )
-                    update_status("Combining request, metadata, and retrieved records into final prompt...")
+                    if not rag_enabled:
+                        retrieval_payload = self.disabled_rag_payload(retrieval_query)
+                    update_status("Combining request, metadata, and retrieval settings into final prompt...")
                     prompt_bundle = build_final_prompt(
                         user_request=request,
                         dataset_metadata=metadata,
                         retrieval_payload=retrieval_payload,
+                        rag_enabled=rag_enabled,
                     )
                 resolved_model = normalize_model_name(settings.model, settings.provider)
                 update_status(f"Calling LLM: waiting for response from {resolved_model}...")

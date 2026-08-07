@@ -46,6 +46,7 @@ def default_manual_session_path(
     *,
     model_name: str | None = None,
     query_mode: str | None = None,
+    rag_enabled: bool | None = None,
     saved_at: datetime | None = None,
     session_root: str | Path = DEFAULT_SESSION_ROOT,
 ) -> Path:
@@ -53,12 +54,20 @@ def default_manual_session_path(
     dataset_name = ""
     if dataset_path:
         dataset_name = Path(dataset_path).stem
+    rag_mode = None
+    if rag_enabled is not None:
+        rag_mode = "rag" if rag_enabled else "no_rag"
     filename_parts = [_session_filename_part(dataset_name)]
-    for value in (model_name, query_mode):
+    for value in (model_name, query_mode, rag_mode):
         if value:
             filename_parts.append(_session_filename_part(str(value)))
     name = "_".join(filename_parts)
     return Path(session_root) / f"{name}_{timestamp}.json"
+
+
+def default_viewport_image_path(session_path: str | Path) -> Path:
+    path = Path(session_path)
+    return path.with_name(f"{path.stem}_viewport.png")
 
 
 def write_last_session(

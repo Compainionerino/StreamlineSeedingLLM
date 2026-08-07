@@ -32,12 +32,14 @@ class PromptBundle:
     retrieval_query: str
     final_prompt: str
     selected_records: list[dict[str, Any]]
+    rag_enabled: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "retrieval_query": self.retrieval_query,
             "final_prompt": self.final_prompt,
             "selected_records": self.selected_records,
+            "rag_enabled": self.rag_enabled,
         }
 
 
@@ -93,18 +95,31 @@ def build_final_prompt(
     user_request: UserRequest,
     dataset_metadata: Mapping[str, Any],
     retrieval_payload: Mapping[str, Any],
+    rag_enabled: bool | None = None,
     top_records: int = 3,
 ) -> PromptBundle:
+    if rag_enabled is None:
+        rag_enabled = retrieval_payload.get("rag_enabled", True) is not False
     retrieval_query = build_retrieval_query(user_request, dataset_metadata)
+    raw_results = [] if not rag_enabled else list(retrieval_payload.get("results", []))
     records = [
         record_for_prompt(record)
-        for record in list(retrieval_payload.get("results", []))[:top_records]
+        for record in raw_results[:top_records]
         if isinstance(record, Mapping)
     ]
+    rag_instruction = (
+        "RAG retrieval is enabled. Use the dataset metadata, the user request, and the retrieved "
+        "literature records to choose a practical seeding technique and parameterization."
+    )
+    if not rag_enabled:
+        rag_instruction = (
+            "RAG retrieval is disabled for this run. Use only the dataset metadata and the user "
+            "request; do not assume that retrieved literature records are available."
+        )
 
     prompt = f"""You are generating pure Python VTK code for a local PySide6 + VTK desktop application.
 
-Your task is to implement a visualization focused on streamline or pathline seeding. Use the dataset metadata, the user request, and the retrieved literature records to choose a practical seeding technique and parameterization.
+Your task is to implement a visualization focused on streamline or pathline seeding. {rag_instruction}
 
 Host application contract:
 - The trusted visualization host process owns a PySide6 window with a QVTKRenderWindowInteractor viewport.
@@ -126,6 +141,7 @@ def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
 - Do not call Start(), Initialize(), Render(), show(), open(), eval(), exec(), os, subprocess, socket, requests, or urllib.
 - Do not import PySide6, Qt, QVTKRenderWindowInteractor, tkinter, or any GUI toolkit.
 - If an exact paper technique is too specialized, implement the closest practical VTK version and document the approximation in code comments.
+- At the point where seeds are created or configured, add a concise code comment naming the seeding strategy being used.
 - Prefer robust defaults that work for the supplied dataset arrays and bounds.
 
 User request:
@@ -152,4 +168,5 @@ Implementation guidance:
         retrieval_query=normalize_whitespace(retrieval_query),
         final_prompt=prompt.strip(),
         selected_records=records,
+        rag_enabled=rag_enabled,
     )

@@ -70,6 +70,29 @@ class QueryPromptingTests(unittest.TestCase):
         self.assertIn("seed_placement_strategy: Sample entropy field.", bundle.final_prompt)
         self.assertNotIn("THIS SHOULD NOT APPEAR", bundle.final_prompt)
 
+    def test_prompt_marks_rag_disabled_and_ignores_records(self) -> None:
+        bundle = build_final_prompt(
+            user_request=UserRequest(visualization_goal="Show streamlines."),
+            dataset_metadata={"hints": ["3d"]},
+            retrieval_payload={
+                "rag_enabled": False,
+                "results": [
+                    {
+                        "rank": 1,
+                        "score": 0.7,
+                        "paper_title": "Should be ignored",
+                        "algorithm_name": "Ignored seeding",
+                    }
+                ],
+            },
+            rag_enabled=False,
+        )
+
+        self.assertFalse(bundle.rag_enabled)
+        self.assertEqual(bundle.selected_records, [])
+        self.assertIn("RAG retrieval is disabled for this run", bundle.final_prompt)
+        self.assertNotIn("Ignored seeding", bundle.final_prompt)
+
     def test_prompt_describes_host_qvtk_viewport_contract(self) -> None:
         bundle = build_final_prompt(
             user_request=UserRequest(visualization_goal="Show streamlines."),
@@ -81,6 +104,7 @@ class QueryPromptingTests(unittest.TestCase):
         self.assertIn("host process will attach the returned vtkRenderer", bundle.final_prompt)
         self.assertIn("Do not create a vtkRenderWindow", bundle.final_prompt)
         self.assertIn("Do not call Start(), Initialize(), Render()", bundle.final_prompt)
+        self.assertIn("add a concise code comment naming the seeding strategy", bundle.final_prompt)
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ from pathlib import Path
 from app.session_store import (
     SESSION_SCHEMA_VERSION,
     default_manual_session_path,
+    default_viewport_image_path,
     load_last_session,
     load_session,
     write_last_session,
@@ -68,6 +69,31 @@ class SessionStoreTests(unittest.TestCase):
         self.assertEqual(
             path,
             Path("sessions") / "Kitchen_Flow_openai_gpt-5.4-mini_feature_aware_20260708_143512.json",
+        )
+
+    def test_default_manual_session_path_appends_rag_mode_when_provided(self) -> None:
+        path = default_manual_session_path(
+            r"C:\datasets\Kitchen Flow.vtk",
+            model_name="openai/gpt-5.4-mini",
+            query_mode="feature aware",
+            rag_enabled=False,
+            saved_at=datetime(2026, 7, 8, 14, 35, 12),
+            session_root="sessions",
+        )
+
+        self.assertEqual(
+            path,
+            Path("sessions") / "Kitchen_Flow_openai_gpt-5.4-mini_feature_aware_no_rag_20260708_143512.json",
+        )
+
+    def test_default_viewport_image_path_uses_session_stem(self) -> None:
+        path = default_viewport_image_path(
+            Path("sessions") / "Kitchen_Flow_openai_gpt-5.4-mini_feature_aware_no_rag_20260708_143512.json"
+        )
+
+        self.assertEqual(
+            path,
+            Path("sessions") / "Kitchen_Flow_openai_gpt-5.4-mini_feature_aware_no_rag_20260708_143512_viewport.png",
         )
 
     def test_write_and_load_manual_session(self) -> None:
