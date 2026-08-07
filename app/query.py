@@ -6,8 +6,13 @@ from typing import Any, Mapping
 from rag.text import normalize_whitespace
 
 
+DEFAULT_QUERY_MODE = "explorative"
+QUERY_MODES: tuple[str, ...] = (DEFAULT_QUERY_MODE, "feature aware")
+
+
 @dataclass(frozen=True)
 class UserRequest:
+    query_mode: str = DEFAULT_QUERY_MODE
     visualization_goal: str = ""
     target_feature: str = ""
     data_dimension: str = ""
@@ -84,7 +89,7 @@ def build_retrieval_query(
     """Build record-shaped query text for the existing hybrid retriever."""
 
     metadata_context = _metadata_context(metadata)
-    lines = [
+    request_lines = [
         f"application_goal: {_clean(user_request.visualization_goal)}",
         f"application_context: {metadata_context}",
         f"target_feature: {_clean(user_request.target_feature)}",
@@ -95,7 +100,11 @@ def build_retrieval_query(
         f"seed_spacing_or_filtering: {_clean(user_request.density_clutter_preference)}",
         f"limitations_or_notes: {_clean(user_request.constraints)} {_clean(user_request.notes)}",
     ]
-    return normalize_whitespace("\n".join(line for line in lines if line.split(":", 1)[1].strip()))
+    lines = [line for line in request_lines if line.split(":", 1)[1].strip()]
+    query_mode = _clean(user_request.query_mode)
+    if lines and query_mode:
+        lines.insert(0, f"query_mode: {query_mode}")
+    return normalize_whitespace("\n".join(lines))
 
 
 def infer_request_defaults_from_metadata(metadata: Mapping[str, Any]) -> dict[str, str]:
@@ -117,4 +126,3 @@ def infer_request_defaults_from_metadata(metadata: Mapping[str, Any]) -> dict[st
         data_type = "unstructured grid"
 
     return {"data_dimension": data_dimension, "data_type": data_type}
-

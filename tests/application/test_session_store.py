@@ -56,6 +56,20 @@ class SessionStoreTests(unittest.TestCase):
 
         self.assertEqual(path, Path("sessions") / "Kitchen_Flow_20260708_143512.json")
 
+    def test_default_manual_session_path_appends_model_and_query_mode(self) -> None:
+        path = default_manual_session_path(
+            r"C:\datasets\Kitchen Flow.vtk",
+            model_name="openai/gpt-5.4-mini",
+            query_mode="feature aware",
+            saved_at=datetime(2026, 7, 8, 14, 35, 12),
+            session_root="sessions",
+        )
+
+        self.assertEqual(
+            path,
+            Path("sessions") / "Kitchen_Flow_openai_gpt-5.4-mini_feature_aware_20260708_143512.json",
+        )
+
     def test_write_and_load_manual_session(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "sample_20260708_143512.json"

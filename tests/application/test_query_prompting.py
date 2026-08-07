@@ -9,6 +9,7 @@ from app.query import UserRequest, build_retrieval_query, infer_request_defaults
 class QueryPromptingTests(unittest.TestCase):
     def test_build_retrieval_query_uses_record_like_fields(self) -> None:
         request = UserRequest(
+            query_mode="feature aware",
             visualization_goal="Show vortices with low clutter.",
             target_feature="vortex cores",
             data_dimension="3D",
@@ -24,6 +25,7 @@ class QueryPromptingTests(unittest.TestCase):
 
         query = build_retrieval_query(request, metadata)
 
+        self.assertIn("query_mode: feature aware", query)
         self.assertIn("application_goal: Show vortices", query)
         self.assertIn("target_feature: vortex cores", query)
         self.assertIn("data_dimension: 3D volume flow", query)
@@ -35,6 +37,11 @@ class QueryPromptingTests(unittest.TestCase):
 
         self.assertEqual(defaults["data_dimension"], "3D")
         self.assertEqual(defaults["data_type"], "surface flow")
+
+    def test_query_mode_alone_does_not_make_retrieval_query_non_empty(self) -> None:
+        query = build_retrieval_query(UserRequest(), {})
+
+        self.assertEqual(query, "")
 
     def test_prompt_uses_structured_record_fields_not_raw_retrieval_text(self) -> None:
         request = UserRequest(visualization_goal="Generate representative streamlines.")

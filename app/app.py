@@ -20,7 +20,13 @@ from .llm import (
     normalize_model_name,
 )
 from .prompting import PromptBundle, build_final_prompt
-from .query import UserRequest, build_retrieval_query, infer_request_defaults_from_metadata
+from .query import (
+    DEFAULT_QUERY_MODE,
+    QUERY_MODES,
+    UserRequest,
+    build_retrieval_query,
+    infer_request_defaults_from_metadata,
+)
 from .run_store import RunArtifacts, write_run_artifacts
 from .safe_execution import SafeExecutionResult, run_generated_code_safely
 from .session_store import (
@@ -273,6 +279,19 @@ if GUI_IMPORT_ERROR is None:
             if index >= 0:
                 self.provider_combo.setCurrentIndex(index)
 
+        def current_query_mode(self) -> str:
+            query_mode = self.query_mode_combo.currentData()
+            if isinstance(query_mode, str) and query_mode in QUERY_MODES:
+                return query_mode
+            return DEFAULT_QUERY_MODE
+
+        def set_query_mode(self, query_mode: str) -> None:
+            index = self.query_mode_combo.findData(query_mode)
+            if index < 0:
+                index = self.query_mode_combo.findData(DEFAULT_QUERY_MODE)
+            if index >= 0:
+                self.query_mode_combo.setCurrentIndex(index)
+
         def current_provider_option(self) -> dict[str, str]:
             return LLM_PROVIDER_BY_ID.get(self.current_provider_id(), LLM_PROVIDER_BY_ID["custom"])
 
@@ -328,6 +347,7 @@ if GUI_IMPORT_ERROR is None:
                 widget.textChanged.connect(self.schedule_session_autosave)
             for widget in (self.temperature, self.max_tokens, self.top_k):
                 widget.valueChanged.connect(self.schedule_session_autosave)
+            self.query_mode_combo.currentIndexChanged.connect(self.schedule_session_autosave)
             self.main_splitter.splitterMoved.connect(self.schedule_session_autosave)
             self.workflow_tabs.currentChanged.connect(self.schedule_session_autosave)
             self.viewport_tabs.currentChanged.connect(self.schedule_session_autosave)
@@ -402,6 +422,7 @@ if GUI_IMPORT_ERROR is None:
                 request = session.get("request")
                 if not isinstance(request, dict):
                     request = {}
+                self.set_query_mode(str(request.get("query_mode") or DEFAULT_QUERY_MODE))
                 self.visualization_goal.setPlainText(str(request.get("visualization_goal") or ""))
                 self.target_feature.setText(str(request.get("target_feature") or ""))
                 self.data_dimension.setText(str(request.get("data_dimension") or ""))
@@ -508,8 +529,18 @@ if GUI_IMPORT_ERROR is None:
 
         def save_manual_session(self) -> None:
             snapshot = self.session_snapshot()
+            settings = snapshot.get("llm_settings")
+            if not isinstance(settings, dict):
+                settings = {}
+            request = snapshot.get("request")
+            if not isinstance(request, dict):
+                request = {}
             DEFAULT_SESSION_ROOT.mkdir(parents=True, exist_ok=True)
-            default_path = default_manual_session_path(snapshot.get("dataset_path"))
+            default_path = default_manual_session_path(
+                snapshot.get("dataset_path"),
+                model_name=str(settings.get("model_name") or ""),
+                query_mode=str(request.get("query_mode") or ""),
+            )
             path, _ = QFileDialog.getSaveFileName(
                 self,
                 "Save Session",
@@ -669,6 +700,9 @@ if GUI_IMPORT_ERROR is None:
         def _request_group(self) -> QGroupBox:
             group = QGroupBox("Visualization Request")
             layout = QFormLayout(group)
+            self.query_mode_combo = QComboBox()
+            for query_mode in QUERY_MODES:
+                self.query_mode_combo.addItem(query_mode, query_mode)
             self.visualization_goal = WheelScopedTextEdit()
             self.visualization_goal.setPlaceholderText("What should the visualization show or help you understand?")
             self.visualization_goal.setMinimumHeight(72)
@@ -688,6 +722,7 @@ if GUI_IMPORT_ERROR is None:
             self.notes.setPlaceholderText("Additional notes")
             self.notes.setMinimumHeight(56)
 
+            layout.addRow("Query mode", self.query_mode_combo)
             layout.addRow("Visualisation goal", self.visualization_goal)
             layout.addRow("Target feature", self.target_feature)
             layout.addRow("Data dimension", self.data_dimension)
@@ -815,6 +850,7 @@ if GUI_IMPORT_ERROR is None:
 
         def current_request(self) -> UserRequest:
             return UserRequest(
+                query_mode=self.current_query_mode(),
                 visualization_goal=self.visualization_goal.toPlainText(),
                 target_feature=self.target_feature.text(),
                 data_dimension=self.data_dimension.text(),

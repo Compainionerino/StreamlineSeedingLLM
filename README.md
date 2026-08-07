@@ -111,7 +111,7 @@ The app provides:
 - an interactive VTK viewport launched in a monitored child process; if that window crashes, the main app stays open and reports the child-process exit
 - interactive viewport stdout/stderr mirrored to the launching terminal for easier copying/debugging
 - automatic last-session restore for the dataset path, request fields, retrieval state, prompt, generated code, and non-secret LLM settings
-- manual session save/load from the workflow panel, with saved filenames containing the selected dataset name and save timestamp
+- manual session save/load from the workflow panel, with saved filenames containing the selected dataset name, model, query mode, and save timestamp
 
 The generated code must define:
 
