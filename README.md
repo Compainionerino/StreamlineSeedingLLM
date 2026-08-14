@@ -113,7 +113,7 @@ The app provides:
 - interactive viewport stdout/stderr mirrored to the launching terminal for easier copying/debugging
 - automatic last-session restore for the dataset path, request fields, retrieval state, prompt, generated code, and non-secret LLM settings
 - manual session save/load from the workflow panel, with saved filenames containing the selected dataset name, model, query mode, RAG mode, and save timestamp
-- experiment metadata fields for comparing configurations, including a success/failure result flag, with manual session saves copying the current viewport preview to a matching `_viewport.png` file when available
+- experiment metadata fields for comparing configurations, including a success/failure result flag, with manual session saves copying the current viewport preview to a matching `_viewport.png` file only for succeeded experiments when available
 
 The generated code must define:
 

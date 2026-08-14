@@ -142,6 +142,15 @@ def _utc_timestamp() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def experiment_viewport_image_for_save(
+    experiment_succeeded: bool,
+    image_payload: Any,
+) -> dict[str, Any] | None:
+    if not experiment_succeeded or not isinstance(image_payload, dict):
+        return None
+    return dict(image_payload)
+
+
 def _retrieval_summary(payload: dict[str, Any]) -> str:
     if payload.get("rag_enabled") is False:
         return "RAG retrieval disabled for this session.\n\nNo retrieved seeding records were used."
@@ -441,7 +450,7 @@ if GUI_IMPORT_ERROR is None:
             self.query_mode_combo.currentIndexChanged.connect(self.schedule_session_autosave)
             self.use_rag_checkbox.stateChanged.connect(self.handle_rag_toggled)
             self.experiment_colormap_used.stateChanged.connect(self.schedule_session_autosave)
-            self.experiment_succeeded.stateChanged.connect(self.schedule_session_autosave)
+            self.experiment_succeeded.stateChanged.connect(self.handle_experiment_succeeded_changed)
             self.experiment_suggested_seeding_used.stateChanged.connect(self.schedule_session_autosave)
             self.main_splitter.splitterMoved.connect(self.schedule_session_autosave)
             self.workflow_tabs.currentChanged.connect(self.schedule_session_autosave)
@@ -452,9 +461,14 @@ if GUI_IMPORT_ERROR is None:
                 return
             self.session_autosave_timer.start()
 
+        def handle_experiment_succeeded_changed(self, *_: Any) -> None:
+            self.update_experiment_viewport_image_label()
+            self.schedule_session_autosave()
+
         def experiment_snapshot(self) -> dict[str, Any]:
+            succeeded = self.experiment_succeeded.isChecked()
             payload: dict[str, Any] = {
-                "succeeded": self.experiment_succeeded.isChecked(),
+                "succeeded": succeeded,
                 "attempts": int(self.experiment_attempts.value()),
                 "features_recognized": int(self.experiment_features_recognized.value()),
                 "feature_notes": self.experiment_feature_notes.toPlainText(),
@@ -464,8 +478,9 @@ if GUI_IMPORT_ERROR is None:
                 "seeding_notes": self.experiment_seeding_notes.toPlainText(),
                 "viewport_image": None,
             }
-            if self.experiment_viewport_image is not None:
-                payload["viewport_image"] = dict(self.experiment_viewport_image)
+            image_payload = experiment_viewport_image_for_save(succeeded, self.experiment_viewport_image)
+            if image_payload is not None:
+                payload["viewport_image"] = image_payload
             return payload
 
         def restore_experiment_payload(
@@ -492,7 +507,7 @@ if GUI_IMPORT_ERROR is None:
             self.experiment_seeding_notes.setPlainText(str(payload.get("seeding_notes") or ""))
 
             image_payload = payload.get("viewport_image")
-            if isinstance(image_payload, dict):
+            if self.experiment_succeeded.isChecked() and isinstance(image_payload, dict):
                 self.experiment_viewport_image = dict(image_payload)
                 self.experiment_viewport_image_source_path = self.resolve_experiment_viewport_image_path(
                     image_payload,
@@ -528,6 +543,11 @@ if GUI_IMPORT_ERROR is None:
             label = getattr(self, "experiment_viewport_image_label", None)
             if label is None:
                 return
+            succeeded_widget = getattr(self, "experiment_succeeded", None)
+            if succeeded_widget is not None and not succeeded_widget.isChecked():
+                label.setText("No viewport image associated for failed experiments.")
+                label.setToolTip("")
+                return
             if self.experiment_viewport_image is None:
                 label.setText("No viewport image associated.")
                 label.setToolTip("")
@@ -556,6 +576,13 @@ if GUI_IMPORT_ERROR is None:
             if not isinstance(experiment, dict):
                 experiment = {}
                 snapshot["experiment"] = experiment
+
+            if not bool(experiment.get("succeeded", False)):
+                experiment["viewport_image"] = None
+                self.experiment_viewport_image = None
+                self.experiment_viewport_image_source_path = None
+                self.update_experiment_viewport_image_label()
+                return
 
             source = self.viewport_image_source_path()
             if source is None:

@@ -235,6 +235,33 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(fake.calls[0]["model"], "openai/gpt-5.6-terra")
         self.assertNotIn("temperature", fake.calls[0])
 
+    def test_anthropic_opus_omits_temperature_parameter(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ]
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "anthropic-secret"}, clear=True):
+            response = generate_code(
+                "make vtk code",
+                LLMSettings(model="claude-opus-5", provider="anthropic", temperature=0.7, repair_attempts=0),
+            )
+
+        self.assertEqual(response.model, "anthropic/claude-opus-5")
+        self.assertEqual(fake.calls[0]["model"], "anthropic/claude-opus-5")
+        self.assertNotIn("temperature", fake.calls[0])
+
     def test_gemini_3_models_omit_deprecated_temperature_parameter(self) -> None:
         fake = FakeLiteLLM(
             [

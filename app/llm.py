@@ -67,9 +67,10 @@ def provider_from_model_name(model: str) -> str | None:
 
 def _include_temperature_parameter(provider: str, model: str) -> bool:
     selected_provider = provider.strip().lower()
-    if selected_provider == "openai":
+    if selected_provider in {"openai", "anthropic"}:
         return False
-    if selected_provider != "blablador" and provider_from_model_name(model) == "openai":
+    model_provider = provider_from_model_name(model)
+    if selected_provider != "blablador" and model_provider in {"openai", "anthropic"}:
         return False
     if _is_gemini_3_model(model):
         return False
