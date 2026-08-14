@@ -43,6 +43,7 @@ from .session_store import (
 
 
 GUI_IMPORT_ERROR: Exception | None = None
+SAFE_PREVIEW_PLACEHOLDER = "Safe subprocess preview will appear here after validation/run."
 try:
     from PySide6.QtCore import QEvent, QObject, QProcess, QRunnable, Qt, QThreadPool, QTimer, Signal, Slot
     from PySide6.QtGui import QPixmap
@@ -140,6 +141,20 @@ def _pretty_json(payload: Any) -> str:
 
 def _utc_timestamp() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def default_experiment_payload() -> dict[str, Any]:
+    return {
+        "succeeded": False,
+        "attempts": 0,
+        "features_recognized": 0,
+        "feature_notes": "",
+        "colormap_used": False,
+        "suggested_seeding_used": False,
+        "seeding_score": 0,
+        "seeding_notes": "",
+        "viewport_image": None,
+    }
 
 
 def experiment_viewport_image_for_save(
@@ -462,6 +477,26 @@ if GUI_IMPORT_ERROR is None:
             self.session_autosave_timer.start()
 
         def handle_experiment_succeeded_changed(self, *_: Any) -> None:
+            self.update_experiment_viewport_image_label()
+            self.schedule_session_autosave()
+
+        def reset_experiment_for_execution_attempt(self) -> None:
+            previous_restoring_state = self.restoring_session
+            self.restoring_session = True
+            try:
+                self.experiment_succeeded.setChecked(False)
+                self.experiment_attempts.setValue(0)
+                self.experiment_features_recognized.setValue(0)
+                self.experiment_feature_notes.clear()
+                self.experiment_colormap_used.setChecked(False)
+                self.experiment_suggested_seeding_used.setChecked(False)
+                self.experiment_seeding_score.setValue(0)
+                self.experiment_seeding_notes.clear()
+            finally:
+                self.restoring_session = previous_restoring_state
+            self.experiment_viewport_image = None
+            self.experiment_viewport_image_source_path = None
+            self.clear_safe_preview()
             self.update_experiment_viewport_image_label()
             self.schedule_session_autosave()
 
@@ -1095,7 +1130,16 @@ if GUI_IMPORT_ERROR is None:
 
         def _experiment_tab(self) -> QWidget:
             tab = QWidget()
-            layout = QFormLayout(tab)
+            outer_layout = QVBoxLayout(tab)
+            outer_layout.setContentsMargins(0, 0, 0, 0)
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            outer_layout.addWidget(scroll)
+
+            container = QWidget()
+            layout = QFormLayout(container)
+            layout.setVerticalSpacing(8)
+            layout.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
 
             self.experiment_succeeded = QCheckBox("Succeeded")
             self.experiment_attempts = QSpinBox()
@@ -1103,13 +1147,17 @@ if GUI_IMPORT_ERROR is None:
             self.experiment_features_recognized = QSpinBox()
             self.experiment_features_recognized.setRange(0, 100000)
             self.experiment_feature_notes = WheelScopedPlainTextEdit()
-            self.experiment_feature_notes.setMinimumHeight(72)
+            self.experiment_feature_notes.setFixedHeight(88)
+            self.experiment_feature_notes.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+            self.experiment_feature_notes.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.experiment_colormap_used = QCheckBox()
             self.experiment_suggested_seeding_used = QCheckBox()
             self.experiment_seeding_score = QSpinBox()
             self.experiment_seeding_score.setRange(0, 100)
             self.experiment_seeding_notes = WheelScopedPlainTextEdit()
-            self.experiment_seeding_notes.setMinimumHeight(72)
+            self.experiment_seeding_notes.setFixedHeight(88)
+            self.experiment_seeding_notes.setLineWrapMode(QPlainTextEdit.LineWrapMode.WidgetWidth)
+            self.experiment_seeding_notes.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
             self.experiment_viewport_image_label = QLabel("No viewport image associated.")
             self.experiment_viewport_image_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
@@ -1122,6 +1170,7 @@ if GUI_IMPORT_ERROR is None:
             layout.addRow("Seeding Score", self.experiment_seeding_score)
             layout.addRow("Notes about Seeding Strategy", self.experiment_seeding_notes)
             layout.addRow("Viewport image", self.experiment_viewport_image_label)
+            scroll.setWidget(container)
             return tab
 
         def _build_viewport_panel(self) -> QWidget:
@@ -1131,7 +1180,7 @@ if GUI_IMPORT_ERROR is None:
 
             preview_panel = QWidget()
             preview_layout = QVBoxLayout(preview_panel)
-            self.preview_label = QLabel("Safe subprocess preview will appear here after validation/run.")
+            self.preview_label = QLabel(SAFE_PREVIEW_PLACEHOLDER)
             self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.preview_label.setMinimumSize(640, 420)
             self.preview_label.setStyleSheet("background: #15171d; color: #d8dce7;")
@@ -1441,6 +1490,7 @@ if GUI_IMPORT_ERROR is None:
                 self.set_status("Execution cancelled")
                 return
 
+            self.reset_experiment_for_execution_attempt()
             dataset_path = self.dataset_path.text().strip()
             metadata = self.metadata_payload()
             user_request = self.current_request().to_dict()
@@ -1475,6 +1525,13 @@ if GUI_IMPORT_ERROR is None:
             )
             self.preview_label.setPixmap(scaled)
             self.viewport_tabs.setCurrentIndex(0)
+
+        def clear_safe_preview(self) -> None:
+            self.last_preview_png = None
+            preview_label = getattr(self, "preview_label", None)
+            if preview_label is not None:
+                preview_label.clear()
+                preview_label.setText(SAFE_PREVIEW_PLACEHOLDER)
 
         def launch_interactive_viewport(self) -> None:
             self.close_existing_viewport_process()
