@@ -13,7 +13,7 @@ class ExperimentSessionTests(unittest.TestCase):
         payload = app_module.default_experiment_payload()
 
         self.assertFalse(payload["succeeded"])
-        self.assertEqual(payload["attempts"], 0)
+        self.assertEqual(payload["attempts"], 1)
         self.assertEqual(payload["features_recognized"], 0)
         self.assertEqual(payload["feature_notes"], "")
         self.assertFalse(payload["colormap_used"])
@@ -118,7 +118,7 @@ class ExperimentSessionTests(unittest.TestCase):
         app_module.MainWindow.reset_experiment_for_execution_attempt(fake_window)
 
         self.assertFalse(fake_window.experiment_succeeded.checked)
-        self.assertEqual(fake_window.experiment_attempts.value, 0)
+        self.assertEqual(fake_window.experiment_attempts.value, 1)
         self.assertEqual(fake_window.experiment_features_recognized.value, 0)
         self.assertEqual(fake_window.experiment_feature_notes.text, "")
         self.assertFalse(fake_window.experiment_colormap_used.checked)

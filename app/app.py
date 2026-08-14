@@ -146,7 +146,7 @@ def _utc_timestamp() -> str:
 def default_experiment_payload() -> dict[str, Any]:
     return {
         "succeeded": False,
-        "attempts": 0,
+        "attempts": 1,
         "features_recognized": 0,
         "feature_notes": "",
         "colormap_used": False,
@@ -485,7 +485,7 @@ if GUI_IMPORT_ERROR is None:
             self.restoring_session = True
             try:
                 self.experiment_succeeded.setChecked(False)
-                self.experiment_attempts.setValue(0)
+                self.experiment_attempts.setValue(1)
                 self.experiment_features_recognized.setValue(0)
                 self.experiment_feature_notes.clear()
                 self.experiment_colormap_used.setChecked(False)
@@ -526,14 +526,16 @@ if GUI_IMPORT_ERROR is None:
             if not isinstance(payload, dict):
                 payload = {}
 
-            def int_value(key: str) -> int:
+            def int_value(key: str, default: int = 0) -> int:
+                if key not in payload:
+                    return default
                 try:
                     return int(payload.get(key) or 0)
                 except (TypeError, ValueError):
-                    return 0
+                    return default
 
             self.experiment_succeeded.setChecked(bool(payload.get("succeeded", False)))
-            self.experiment_attempts.setValue(int_value("attempts"))
+            self.experiment_attempts.setValue(int_value("attempts", 1))
             self.experiment_features_recognized.setValue(int_value("features_recognized"))
             self.experiment_feature_notes.setPlainText(str(payload.get("feature_notes") or ""))
             self.experiment_colormap_used.setChecked(bool(payload.get("colormap_used", False)))
@@ -1144,6 +1146,7 @@ if GUI_IMPORT_ERROR is None:
             self.experiment_succeeded = QCheckBox("Succeeded")
             self.experiment_attempts = QSpinBox()
             self.experiment_attempts.setRange(0, 100000)
+            self.experiment_attempts.setValue(1)
             self.experiment_features_recognized = QSpinBox()
             self.experiment_features_recognized.setRange(0, 100000)
             self.experiment_feature_notes = WheelScopedPlainTextEdit()

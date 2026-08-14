@@ -16,6 +16,8 @@ MAX_TOKEN_LIMIT = 200000
 DEFAULT_MAX_CONTINUATIONS = 2
 DEFAULT_REPAIR_ATTEMPTS = 2
 BLABLADOR_API_BASE = "https://api.blablador.fz-juelich.de/v1/"
+OPENAI_TERRA_MODEL = "openai/gpt-5.6-terra"
+OPENAI_TERRA_REASONING_EFFORT = "xhigh"
 PROVIDER_MODEL_PREFIXES = {
     "openai": "openai/",
     "anthropic": "anthropic/",
@@ -75,6 +77,12 @@ def _include_temperature_parameter(provider: str, model: str) -> bool:
     if _is_gemini_3_model(model):
         return False
     return True
+
+
+def _reasoning_effort_for_model(model: str) -> str:
+    if model.strip().lower() == OPENAI_TERRA_MODEL:
+        return OPENAI_TERRA_REASONING_EFFORT
+    return ""
 
 
 def _current_model_provider(settings: LLMSettings) -> str | None:
@@ -343,6 +351,7 @@ def _print_token_usage_summary(
     requested_model: str,
     model: str,
     api_base: str,
+    reasoning_effort: str,
     continuation_count: int,
     repair_attempts: int,
     call_usages: Sequence[LLMCallUsage],
@@ -352,6 +361,8 @@ def _print_token_usage_summary(
     print(f"[streamline-rag] Requested model: {requested_model}", flush=True)
     print(f"[streamline-rag] LiteLLM model: {model}", flush=True)
     print(f"[streamline-rag] API base: {api_base or 'not configured'}", flush=True)
+    if reasoning_effort:
+        print(f"[streamline-rag] Reasoning effort: {reasoning_effort}", flush=True)
     response_models = sorted({usage.response_model for usage in call_usages if usage.response_model})
     if response_models:
         print(f"[streamline-rag] Provider-reported model(s): {', '.join(response_models)}", flush=True)
@@ -394,6 +405,9 @@ def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]
     }
     if _include_temperature_parameter(settings.provider, model):
         kwargs["temperature"] = settings.temperature
+    reasoning_effort = _reasoning_effort_for_model(model)
+    if reasoning_effort:
+        kwargs["reasoning_effort"] = reasoning_effort
     if settings.api_key:
         kwargs["api_key"] = settings.api_key
     elif selected_provider in PROVIDER_ENV_API_KEY_FOR_COMPLETION:
@@ -570,6 +584,7 @@ def generate_code(prompt: str, settings: LLMSettings) -> LLMResponse:
         requested_model=settings.model,
         model=normalize_model_name(settings.model, settings.provider),
         api_base=_settings_api_base(settings),
+        reasoning_effort=_reasoning_effort_for_model(normalize_model_name(settings.model, settings.provider)),
         continuation_count=continuation_count,
         repair_attempts=repair_attempts,
         call_usages=call_usages,

@@ -207,8 +207,9 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(response.model, "openai/gpt-test")
         self.assertEqual(fake.calls[0]["model"], "openai/gpt-test")
         self.assertNotIn("api_key", fake.calls[0])
+        self.assertNotIn("reasoning_effort", fake.calls[0])
 
-    def test_openai_terra_omits_temperature_parameter(self) -> None:
+    def test_openai_terra_omits_temperature_and_uses_xhigh_reasoning_effort(self) -> None:
         fake = FakeLiteLLM(
             [
                 {
@@ -234,6 +235,7 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(response.model, "openai/gpt-5.6-terra")
         self.assertEqual(fake.calls[0]["model"], "openai/gpt-5.6-terra")
         self.assertNotIn("temperature", fake.calls[0])
+        self.assertEqual(fake.calls[0]["reasoning_effort"], "xhigh")
 
     def test_anthropic_opus_omits_temperature_parameter(self) -> None:
         fake = FakeLiteLLM(

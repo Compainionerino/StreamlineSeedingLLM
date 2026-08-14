@@ -60,7 +60,7 @@
 >Explore the Datasets flow dynamics by using sufficient amounts of Streamlines. Please also make sure to visualize several of the timesteps so that the difference in the flow can be observed. 
 >- Show the flow Flow around the solid block and irreglar flow at the end
 >- Showing different time slices
->
+>- There is an obstruction in the front, please also try to visualize it.
 >**(Data dimension:)**
 >    
 >2D with time steps
