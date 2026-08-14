@@ -149,6 +149,7 @@ class LLMResponse:
 class LLMCallUsage:
     label: str
     model: str
+    response_model: str | None
     finish_reason: str | None
     input_tokens: int | float | None = None
     output_tokens: int | float | None = None
@@ -159,6 +160,7 @@ class LLMCallUsage:
         return {
             "label": self.label,
             "model": self.model,
+            "response_model": self.response_model,
             "finish_reason": self.finish_reason,
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
@@ -202,6 +204,14 @@ def _finish_reason(response: Any) -> str | None:
         return response.choices[0].finish_reason
     except Exception:
         return None
+
+
+def _response_model(response: Any) -> str | None:
+    try:
+        value = response["model"]
+    except Exception:
+        value = getattr(response, "model", None)
+    return value if isinstance(value, str) and value else None
 
 
 def _is_truncated(response: Any) -> bool:
@@ -269,6 +279,7 @@ def _call_usage(call_label: str, model: str, response: Any) -> LLMCallUsage:
     return LLMCallUsage(
         label=call_label,
         model=model,
+        response_model=_response_model(response),
         finish_reason=_finish_reason(response),
         input_tokens=input_tokens,
         output_tokens=output_tokens,
@@ -288,6 +299,11 @@ def _format_token_value(value: Any) -> str:
     return str(value) if value is not None else "not reported"
 
 
+def _settings_api_base(settings: LLMSettings) -> str:
+    selected_provider = settings.provider.strip().lower()
+    return settings.api_base.strip() or PROVIDER_DEFAULT_API_BASES.get(selected_provider, "")
+
+
 def _aggregate_token_usage(call_usages: Sequence[LLMCallUsage]) -> dict[str, Any] | None:
     if not call_usages:
         return None
@@ -304,13 +320,22 @@ def _aggregate_token_usage(call_usages: Sequence[LLMCallUsage]) -> dict[str, Any
 
 def _print_token_usage_summary(
     *,
+    provider: str,
+    requested_model: str,
     model: str,
+    api_base: str,
     continuation_count: int,
     repair_attempts: int,
     call_usages: Sequence[LLMCallUsage],
 ) -> None:
     print("[streamline-rag] ===== LLM USAGE SUMMARY =====", flush=True)
-    print(f"[streamline-rag] Model: {model}", flush=True)
+    print(f"[streamline-rag] Provider: {provider or 'custom'}", flush=True)
+    print(f"[streamline-rag] Requested model: {requested_model}", flush=True)
+    print(f"[streamline-rag] LiteLLM model: {model}", flush=True)
+    print(f"[streamline-rag] API base: {api_base or 'not configured'}", flush=True)
+    response_models = sorted({usage.response_model for usage in call_usages if usage.response_model})
+    if response_models:
+        print(f"[streamline-rag] Provider-reported model(s): {', '.join(response_models)}", flush=True)
     print(f"[streamline-rag] Calls: {len(call_usages)}", flush=True)
     print(f"[streamline-rag] Continuations: {continuation_count}", flush=True)
     print(f"[streamline-rag] Repairs: {repair_attempts}", flush=True)
@@ -320,6 +345,8 @@ def _print_token_usage_summary(
         print("[streamline-rag] token usage: not reported by provider for any call", flush=True)
     for index, usage in enumerate(call_usages, start=1):
         print(f"[streamline-rag] {index}. {usage.label}", flush=True)
+        if usage.response_model:
+            print(f"[streamline-rag]    response_model: {usage.response_model}", flush=True)
         print(f"[streamline-rag]    finish_reason: {_format_token_value(usage.finish_reason)}", flush=True)
         print(f"[streamline-rag]    input_tokens: {_format_token_value(usage.input_tokens)}", flush=True)
         print(f"[streamline-rag]    output_tokens: {_format_token_value(usage.output_tokens)}", flush=True)
@@ -353,7 +380,7 @@ def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]
         if env_api_key:
             kwargs["api_key"] = env_api_key
 
-    api_base = settings.api_base.strip() or PROVIDER_DEFAULT_API_BASES.get(selected_provider, "")
+    api_base = _settings_api_base(settings)
     if api_base:
         kwargs["api_base"] = api_base
     return kwargs
@@ -518,7 +545,10 @@ def generate_code(prompt: str, settings: LLMSettings) -> LLMResponse:
 
     token_usage = _aggregate_token_usage(call_usages)
     _print_token_usage_summary(
+        provider=settings.provider.strip().lower(),
+        requested_model=settings.model,
         model=normalize_model_name(settings.model, settings.provider),
+        api_base=_settings_api_base(settings),
         continuation_count=continuation_count,
         repair_attempts=repair_attempts,
         call_usages=call_usages,

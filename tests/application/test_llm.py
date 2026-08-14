@@ -142,6 +142,7 @@ def create_visualization(dataset_path, metadata, user_request):
                             },
                         }
                     ],
+                    "model": "fake-response-model",
                     "usage": {
                         "prompt_tokens": 10,
                         "completion_tokens": 20,
@@ -164,8 +165,14 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(response.token_usage["total"]["total_tokens"], 30)
         printed = output.getvalue()
         self.assertIn("===== LLM USAGE SUMMARY =====", printed)
+        self.assertIn("Provider: custom", printed)
+        self.assertIn("Requested model: fake", printed)
+        self.assertIn("LiteLLM model: fake", printed)
+        self.assertIn("API base: not configured", printed)
+        self.assertIn("Provider-reported model(s): fake-response-model", printed)
         self.assertIn("Response stack:", printed)
         self.assertIn("1. initial generation", printed)
+        self.assertIn("response_model: fake-response-model", printed)
         self.assertIn("finish_reason: stop", printed)
         self.assertIn("input_tokens: 10", printed)
         self.assertIn("output_tokens: 20", printed)
@@ -243,6 +250,38 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(fake.calls[0]["model"], "openai/alias-code")
         self.assertEqual(fake.calls[0]["api_key"], "blablador-secret")
         self.assertEqual(fake.calls[0]["api_base"], BLABLADOR_API_BASE)
+
+    def test_blablador_usage_log_shows_provider_and_api_base(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "model": "provider-specific-code-model",
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ],
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+        output = io.StringIO()
+
+        with patch.dict(os.environ, {"BLABLADOR_API_KEY": "blablador-secret"}, clear=True), redirect_stdout(output):
+            generate_code(
+                "make vtk code",
+                LLMSettings(model="alias-code", provider="blablador", repair_attempts=0),
+            )
+
+        printed = output.getvalue()
+        self.assertIn("Provider: blablador", printed)
+        self.assertIn("Requested model: alias-code", printed)
+        self.assertIn("LiteLLM model: openai/alias-code", printed)
+        self.assertIn(f"API base: {BLABLADOR_API_BASE}", printed)
+        self.assertIn("Provider-reported model(s): provider-specific-code-model", printed)
 
     def test_blablador_provider_accepts_double_o_env_key_alias(self) -> None:
         fake = FakeLiteLLM(
