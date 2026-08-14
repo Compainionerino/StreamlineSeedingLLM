@@ -18,6 +18,8 @@ DEFAULT_REPAIR_ATTEMPTS = 2
 BLABLADOR_API_BASE = "https://api.blablador.fz-juelich.de/v1/"
 OPENAI_TERRA_MODEL = "openai/gpt-5.6-terra"
 OPENAI_TERRA_REASONING_EFFORT = "xhigh"
+GEMINI_FLASH_MODEL = "gemini/gemini-3.7-flash"
+GEMINI_FLASH_REASONING_EFFORT = "high"
 PROVIDER_MODEL_PREFIXES = {
     "openai": "openai/",
     "anthropic": "anthropic/",
@@ -80,8 +82,11 @@ def _include_temperature_parameter(provider: str, model: str) -> bool:
 
 
 def _reasoning_effort_for_model(model: str) -> str:
-    if model.strip().lower() == OPENAI_TERRA_MODEL:
+    cleaned = model.strip().lower()
+    if cleaned == OPENAI_TERRA_MODEL:
         return OPENAI_TERRA_REASONING_EFFORT
+    if cleaned == GEMINI_FLASH_MODEL:
+        return GEMINI_FLASH_REASONING_EFFORT
     return ""
 
 

@@ -480,23 +480,10 @@ if GUI_IMPORT_ERROR is None:
             self.update_experiment_viewport_image_label()
             self.schedule_session_autosave()
 
-        def reset_experiment_for_execution_attempt(self) -> None:
-            previous_restoring_state = self.restoring_session
-            self.restoring_session = True
-            try:
-                self.experiment_succeeded.setChecked(False)
-                self.experiment_attempts.setValue(1)
-                self.experiment_features_recognized.setValue(0)
-                self.experiment_feature_notes.clear()
-                self.experiment_colormap_used.setChecked(False)
-                self.experiment_suggested_seeding_used.setChecked(False)
-                self.experiment_seeding_score.setValue(0)
-                self.experiment_seeding_notes.clear()
-            finally:
-                self.restoring_session = previous_restoring_state
+        def reset_experiment_viewport_image_for_execution_attempt(self) -> None:
             self.experiment_viewport_image = None
             self.experiment_viewport_image_source_path = None
-            self.clear_safe_preview()
+            self.last_preview_png = None
             self.update_experiment_viewport_image_label()
             self.schedule_session_autosave()
 
@@ -1493,7 +1480,7 @@ if GUI_IMPORT_ERROR is None:
                 self.set_status("Execution cancelled")
                 return
 
-            self.reset_experiment_for_execution_attempt()
+            self.reset_experiment_viewport_image_for_execution_attempt()
             dataset_path = self.dataset_path.text().strip()
             metadata = self.metadata_payload()
             user_request = self.current_request().to_dict()

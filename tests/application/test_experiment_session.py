@@ -63,7 +63,7 @@ class ExperimentSessionTests(unittest.TestCase):
             self.assertFalse(default_viewport_image_path(session_path).exists())
 
     @unittest.skipIf(app_module.GUI_IMPORT_ERROR is not None, "PySide6 is unavailable")
-    def test_execution_attempt_resets_experiment_fields_and_preview_association(self) -> None:
+    def test_execution_attempt_resets_only_viewport_image_association(self) -> None:
         class FakeCheckbox:
             def __init__(self, checked: bool = True) -> None:
                 self.checked = checked
@@ -115,20 +115,20 @@ class ExperimentSessionTests(unittest.TestCase):
 
         fake_window = FakeWindow()
 
-        app_module.MainWindow.reset_experiment_for_execution_attempt(fake_window)
+        app_module.MainWindow.reset_experiment_viewport_image_for_execution_attempt(fake_window)
 
-        self.assertFalse(fake_window.experiment_succeeded.checked)
-        self.assertEqual(fake_window.experiment_attempts.value, 1)
-        self.assertEqual(fake_window.experiment_features_recognized.value, 0)
-        self.assertEqual(fake_window.experiment_feature_notes.text, "")
-        self.assertFalse(fake_window.experiment_colormap_used.checked)
-        self.assertFalse(fake_window.experiment_suggested_seeding_used.checked)
-        self.assertEqual(fake_window.experiment_seeding_score.value, 0)
-        self.assertEqual(fake_window.experiment_seeding_notes.text, "")
+        self.assertTrue(fake_window.experiment_succeeded.checked)
+        self.assertEqual(fake_window.experiment_attempts.value, 3)
+        self.assertEqual(fake_window.experiment_features_recognized.value, 5)
+        self.assertEqual(fake_window.experiment_feature_notes.text, "feature notes")
+        self.assertTrue(fake_window.experiment_colormap_used.checked)
+        self.assertTrue(fake_window.experiment_suggested_seeding_used.checked)
+        self.assertEqual(fake_window.experiment_seeding_score.value, 87)
+        self.assertEqual(fake_window.experiment_seeding_notes.text, "seed notes")
         self.assertIsNone(fake_window.experiment_viewport_image)
         self.assertIsNone(fake_window.experiment_viewport_image_source_path)
         self.assertIsNone(fake_window.last_preview_png)
-        self.assertTrue(fake_window.preview_cleared)
+        self.assertFalse(fake_window.preview_cleared)
         self.assertTrue(fake_window.label_updated)
         self.assertTrue(fake_window.autosaved)
 

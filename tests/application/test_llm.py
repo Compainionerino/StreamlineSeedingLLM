@@ -264,7 +264,7 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(fake.calls[0]["model"], "anthropic/claude-opus-5")
         self.assertNotIn("temperature", fake.calls[0])
 
-    def test_gemini_3_models_omit_deprecated_temperature_parameter(self) -> None:
+    def test_gemini_37_flash_omits_temperature_and_uses_high_reasoning_effort(self) -> None:
         fake = FakeLiteLLM(
             [
                 {
@@ -290,6 +290,7 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(response.model, "gemini/gemini-3.7-flash")
         self.assertEqual(fake.calls[0]["model"], "gemini/gemini-3.7-flash")
         self.assertNotIn("temperature", fake.calls[0])
+        self.assertEqual(fake.calls[0]["reasoning_effort"], "high")
 
     def test_missing_gemini_key_errors_only_for_gemini_model(self) -> None:
         fake = FakeLiteLLM([])
