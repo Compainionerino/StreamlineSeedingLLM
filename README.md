@@ -104,7 +104,7 @@ The app provides:
 - optional RAG use, allowing final prompts to be built either with retrieved seeding records or only from dataset metadata and user intent
 - final prompt assembly from dataset metadata, user intent, and selected structured record fields when RAG is enabled
 - LiteLLM-based provider/model switching for code generation, including OpenAI, Anthropic, Gemini, Blablador, and custom LiteLLM-compatible endpoints
-- default code generation with `openai/gpt-5.4-mini`, a 50,000 token output budget adjustable up to 200,000 tokens, automatic continuation on truncation, and two validation-repair attempts
+- default code generation with `anthropic/claude-opus-5`, a 50,000 token output budget adjustable up to 200,000 tokens, automatic continuation on truncation, and two validation-repair attempts
 - compact terminal logging of each LLM call stack, including finish reasons, provider-reported input/output token counts, and aggregate token totals when available
 - explicit confirmation before generated VTK code is executed
 - isolated generated-code smoke testing in a subprocess so VTK/Qt crashes do not terminate the main app
@@ -113,7 +113,7 @@ The app provides:
 - interactive viewport stdout/stderr mirrored to the launching terminal for easier copying/debugging
 - automatic last-session restore for the dataset path, request fields, retrieval state, prompt, generated code, and non-secret LLM settings
 - manual session save/load from the workflow panel, with saved filenames containing the selected dataset name, model, query mode, RAG mode, and save timestamp
-- experiment metadata fields for comparing configurations, with manual session saves copying the current viewport preview to a matching `_viewport.png` file when available
+- experiment metadata fields for comparing configurations, including a success/failure result flag, with manual session saves copying the current viewport preview to a matching `_viewport.png` file when available
 
 The generated code must define:
 

@@ -50,12 +50,30 @@ def normalize_model_name(model: str, provider: str = "custom") -> str:
     return prefix + cleaned
 
 
+def _is_gemini_3_model(model: str) -> bool:
+    cleaned = model.strip().lower()
+    if cleaned.startswith("gemini/"):
+        cleaned = cleaned.split("/", 1)[1]
+    return cleaned.startswith("gemini-3.") or cleaned.startswith("gemini-3-")
+
+
 def provider_from_model_name(model: str) -> str | None:
     cleaned = model.strip().lower()
     for provider, prefix in PROVIDER_MODEL_PREFIXES.items():
         if cleaned.startswith(prefix):
             return provider
     return None
+
+
+def _include_temperature_parameter(provider: str, model: str) -> bool:
+    selected_provider = provider.strip().lower()
+    if selected_provider == "openai":
+        return False
+    if selected_provider != "blablador" and provider_from_model_name(model) == "openai":
+        return False
+    if _is_gemini_3_model(model):
+        return False
+    return True
 
 
 def _current_model_provider(settings: LLMSettings) -> str | None:
@@ -367,12 +385,14 @@ def _print_token_usage_summary(
 
 def _completion_kwargs(settings: LLMSettings, messages: Sequence[dict[str, str]]) -> dict[str, Any]:
     selected_provider = settings.provider.strip().lower()
+    model = normalize_model_name(settings.model, settings.provider)
     kwargs: dict[str, Any] = {
-        "model": normalize_model_name(settings.model, settings.provider),
+        "model": model,
         "messages": list(messages),
-        "temperature": settings.temperature,
         "max_tokens": settings.max_tokens,
     }
+    if _include_temperature_parameter(settings.provider, model):
+        kwargs["temperature"] = settings.temperature
     if settings.api_key:
         kwargs["api_key"] = settings.api_key
     elif selected_provider in PROVIDER_ENV_API_KEY_FOR_COMPLETION:

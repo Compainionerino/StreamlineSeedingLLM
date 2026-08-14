@@ -208,6 +208,60 @@ def create_visualization(dataset_path, metadata, user_request):
         self.assertEqual(fake.calls[0]["model"], "openai/gpt-test")
         self.assertNotIn("api_key", fake.calls[0])
 
+    def test_openai_terra_omits_temperature_parameter(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ]
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "openai-secret"}, clear=True):
+            response = generate_code(
+                "make vtk code",
+                LLMSettings(model="gpt-5.6-terra", provider="openai", temperature=0.7, repair_attempts=0),
+            )
+
+        self.assertEqual(response.model, "openai/gpt-5.6-terra")
+        self.assertEqual(fake.calls[0]["model"], "openai/gpt-5.6-terra")
+        self.assertNotIn("temperature", fake.calls[0])
+
+    def test_gemini_3_models_omit_deprecated_temperature_parameter(self) -> None:
+        fake = FakeLiteLLM(
+            [
+                {
+                    "choices": [
+                        {
+                            "finish_reason": "stop",
+                            "message": {
+                                "content": "import vtk\n\ndef create_visualization(dataset_path, metadata, user_request):\n    return vtk.vtkRenderer()"
+                            },
+                        }
+                    ]
+                },
+            ]
+        )
+        sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "gemini-secret"}, clear=True):
+            response = generate_code(
+                "make vtk code",
+                LLMSettings(model="gemini-3.7-flash", provider="gemini", temperature=0.7, repair_attempts=0),
+            )
+
+        self.assertEqual(response.model, "gemini/gemini-3.7-flash")
+        self.assertEqual(fake.calls[0]["model"], "gemini/gemini-3.7-flash")
+        self.assertNotIn("temperature", fake.calls[0])
+
     def test_missing_gemini_key_errors_only_for_gemini_model(self) -> None:
         fake = FakeLiteLLM([])
         sys.modules["litellm"] = types.SimpleNamespace(completion=fake.completion)

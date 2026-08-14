@@ -78,12 +78,12 @@ except Exception as exc:  # pragma: no cover - depends on optional GUI dependenc
     GUI_IMPORT_ERROR = exc
 
 
-DEFAULT_LLM_PROVIDER_ID = "openai"
+DEFAULT_LLM_PROVIDER_ID = "anthropic"
 LLM_PROVIDER_OPTIONS: tuple[dict[str, str], ...] = (
     {
         "id": "openai",
         "label": "OpenAI",
-        "default_model": "openai/gpt-5.4-mini",
+        "default_model": "openai/gpt-5.6-terra",
         "model_prefix": "openai/",
         "api_key_placeholder": "Optional OpenAI API key; OPENAI_API_KEY also works",
         "api_base_placeholder": "Optional OpenAI-compatible api_base",
@@ -91,7 +91,7 @@ LLM_PROVIDER_OPTIONS: tuple[dict[str, str], ...] = (
     {
         "id": "anthropic",
         "label": "Anthropic",
-        "default_model": "anthropic/claude-sonnet-4-20250514",
+        "default_model": "anthropic/claude-opus-5",
         "model_prefix": "anthropic/",
         "api_key_placeholder": "Optional Anthropic API key; ANTHROPIC_API_KEY also works",
         "api_base_placeholder": "Optional Anthropic-compatible api_base",
@@ -99,7 +99,7 @@ LLM_PROVIDER_OPTIONS: tuple[dict[str, str], ...] = (
     {
         "id": "gemini",
         "label": "Google Gemini",
-        "default_model": "gemini/gemini-2.5-pro",
+        "default_model": "gemini/gemini-3.7-flash",
         "model_prefix": "gemini/",
         "api_key_placeholder": "Optional Gemini API key; GEMINI_API_KEY or GOOGLE_API_KEY also works",
         "api_base_placeholder": "Optional Gemini-compatible api_base",
@@ -273,7 +273,8 @@ if GUI_IMPORT_ERROR is None:
 
         def set_status(self, message: str) -> None:
             self.status_label.setText(message)
-            self.statusBar().showMessage(message)
+            self.status_label.setToolTip(message)
+            self.statusBar().clearMessage()
 
         def set_busy(self, message: str) -> None:
             self.busy = True
@@ -440,6 +441,7 @@ if GUI_IMPORT_ERROR is None:
             self.query_mode_combo.currentIndexChanged.connect(self.schedule_session_autosave)
             self.use_rag_checkbox.stateChanged.connect(self.handle_rag_toggled)
             self.experiment_colormap_used.stateChanged.connect(self.schedule_session_autosave)
+            self.experiment_succeeded.stateChanged.connect(self.schedule_session_autosave)
             self.experiment_suggested_seeding_used.stateChanged.connect(self.schedule_session_autosave)
             self.main_splitter.splitterMoved.connect(self.schedule_session_autosave)
             self.workflow_tabs.currentChanged.connect(self.schedule_session_autosave)
@@ -452,6 +454,7 @@ if GUI_IMPORT_ERROR is None:
 
         def experiment_snapshot(self) -> dict[str, Any]:
             payload: dict[str, Any] = {
+                "succeeded": self.experiment_succeeded.isChecked(),
                 "attempts": int(self.experiment_attempts.value()),
                 "features_recognized": int(self.experiment_features_recognized.value()),
                 "feature_notes": self.experiment_feature_notes.toPlainText(),
@@ -479,6 +482,7 @@ if GUI_IMPORT_ERROR is None:
                 except (TypeError, ValueError):
                     return 0
 
+            self.experiment_succeeded.setChecked(bool(payload.get("succeeded", False)))
             self.experiment_attempts.setValue(int_value("attempts"))
             self.experiment_features_recognized.setValue(int_value("features_recognized"))
             self.experiment_feature_notes.setPlainText(str(payload.get("feature_notes") or ""))
@@ -1066,6 +1070,7 @@ if GUI_IMPORT_ERROR is None:
             tab = QWidget()
             layout = QFormLayout(tab)
 
+            self.experiment_succeeded = QCheckBox("Succeeded")
             self.experiment_attempts = QSpinBox()
             self.experiment_attempts.setRange(0, 100000)
             self.experiment_features_recognized = QSpinBox()
@@ -1081,6 +1086,7 @@ if GUI_IMPORT_ERROR is None:
             self.experiment_viewport_image_label = QLabel("No viewport image associated.")
             self.experiment_viewport_image_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
+            layout.addRow("Result", self.experiment_succeeded)
             layout.addRow("Attempts", self.experiment_attempts)
             layout.addRow("Amount of Features Recognized", self.experiment_features_recognized)
             layout.addRow("Notes about Features", self.experiment_feature_notes)

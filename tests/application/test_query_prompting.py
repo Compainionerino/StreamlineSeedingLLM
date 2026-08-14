@@ -92,6 +92,8 @@ class QueryPromptingTests(unittest.TestCase):
         self.assertEqual(bundle.selected_records, [])
         self.assertIn("RAG retrieval is disabled for this run", bundle.final_prompt)
         self.assertNotIn("Ignored seeding", bundle.final_prompt)
+        self.assertNotIn("If an exact paper technique is too specialized", bundle.final_prompt)
+        self.assertNotIn("add a concise code comment naming the seeding strategy", bundle.final_prompt)
 
     def test_prompt_describes_host_qvtk_viewport_contract(self) -> None:
         bundle = build_final_prompt(

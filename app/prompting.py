@@ -116,6 +116,14 @@ def build_final_prompt(
             "RAG retrieval is disabled for this run. Use only the dataset metadata and the user "
             "request; do not assume that retrieved literature records are available."
         )
+    rag_hard_requirements = ""
+    if rag_enabled:
+        rag_hard_requirements = "\n".join(
+            [
+                "- If an exact paper technique is too specialized, implement the closest practical VTK version and document the approximation in code comments.",
+                "- At the point where seeds are created or configured, add a concise code comment naming the seeding strategy being used.",
+            ]
+        )
 
     prompt = f"""You are generating pure Python VTK code for a local PySide6 + VTK desktop application.
 
@@ -140,8 +148,7 @@ def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
 - Do not create a vtkRenderWindow, vtkRenderWindowInteractor, QVTK widget, QApplication, QWidget, or event loop.
 - Do not call Start(), Initialize(), Render(), show(), open(), eval(), exec(), os, subprocess, socket, requests, or urllib.
 - Do not import PySide6, Qt, QVTKRenderWindowInteractor, tkinter, or any GUI toolkit.
-- If an exact paper technique is too specialized, implement the closest practical VTK version and document the approximation in code comments.
-- At the point where seeds are created or configured, add a concise code comment naming the seeding strategy being used.
+{rag_hard_requirements}
 
 User request:
 {_json_block(user_request.to_dict())}
