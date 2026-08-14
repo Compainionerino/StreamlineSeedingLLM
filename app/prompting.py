@@ -142,7 +142,6 @@ def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
 - Do not import PySide6, Qt, QVTKRenderWindowInteractor, tkinter, or any GUI toolkit.
 - If an exact paper technique is too specialized, implement the closest practical VTK version and document the approximation in code comments.
 - At the point where seeds are created or configured, add a concise code comment naming the seeding strategy being used.
-- Prefer robust defaults that work for the supplied dataset arrays and bounds.
 
 User request:
 {_json_block(user_request.to_dict())}
