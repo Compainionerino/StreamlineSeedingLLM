@@ -44,9 +44,10 @@ from .session_store import (
 
 GUI_IMPORT_ERROR: Exception | None = None
 try:
-    from PySide6.QtCore import QObject, QProcess, QRunnable, Qt, QThreadPool, QTimer, Signal, Slot
+    from PySide6.QtCore import QEvent, QObject, QProcess, QRunnable, Qt, QThreadPool, QTimer, Signal, Slot
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
+        QAbstractSpinBox,
         QApplication,
         QCheckBox,
         QFileDialog,
@@ -63,6 +64,9 @@ try:
         QScrollArea,
         QSplitter,
         QSpinBox,
+        QSlider,
+        QDial,
+        QTabBar,
         QTabWidget,
         QTextEdit,
         QVBoxLayout,
@@ -172,14 +176,21 @@ if GUI_IMPORT_ERROR is None:
             event.accept()
 
 
-    class WheelNeutralSpinBox(QSpinBox):
-        def wheelEvent(self, event: Any) -> None:
-            event.ignore()
-
-
-    class WheelNeutralDoubleSpinBox(QDoubleSpinBox):
-        def wheelEvent(self, event: Any) -> None:
-            event.ignore()
+    class WheelSelectionGuard(QObject):
+        def eventFilter(self, watched: Any, event: Any) -> bool:
+            if event.type() == QEvent.Type.Wheel and isinstance(
+                watched,
+                (
+                    QAbstractSpinBox,
+                    QComboBox,
+                    QDial,
+                    QSlider,
+                    QTabBar,
+                ),
+            ):
+                event.ignore()
+                return True
+            return super().eventFilter(watched, event)
 
 
     class TaskSignals(QObject):
@@ -209,6 +220,10 @@ if GUI_IMPORT_ERROR is None:
             super().__init__()
             self.setWindowTitle("Local VTK Seeding RAG")
             self.resize(1500, 920)
+            self.wheel_selection_guard = WheelSelectionGuard(self)
+            qt_app = QApplication.instance()
+            if qt_app is not None:
+                qt_app.installEventFilter(self.wheel_selection_guard)
 
             self.index_dir = index_dir
             self.retriever: HybridRetriever | None = None
@@ -979,16 +994,16 @@ if GUI_IMPORT_ERROR is None:
             self.api_key = QLineEdit()
             self.api_key.setEchoMode(QLineEdit.EchoMode.Password)
             self.api_base = QLineEdit()
-            self.temperature = WheelNeutralDoubleSpinBox()
+            self.temperature = QDoubleSpinBox()
             self.temperature.setDecimals(2)
             self.temperature.setRange(0.0, 2.0)
             self.temperature.setSingleStep(0.05)
             self.temperature.setValue(0.2)
-            self.max_tokens = WheelNeutralSpinBox()
+            self.max_tokens = QSpinBox()
             self.max_tokens.setRange(512, MAX_TOKEN_LIMIT)
             self.max_tokens.setSingleStep(512)
             self.max_tokens.setValue(DEFAULT_MAX_TOKENS)
-            self.top_k = WheelNeutralSpinBox()
+            self.top_k = QSpinBox()
             self.top_k.setRange(1, 20)
             self.top_k.setValue(5)
             self.provider_combo.currentIndexChanged.connect(self.handle_provider_changed)
