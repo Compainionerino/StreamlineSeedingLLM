@@ -91,7 +91,12 @@ class QueryPromptingTests(unittest.TestCase):
         self.assertFalse(bundle.rag_enabled)
         self.assertEqual(bundle.selected_records, [])
         self.assertIn("RAG retrieval is disabled for this run", bundle.final_prompt)
+        self.assertIn(
+            "Select the seed source and density from the dataset metadata and the user request.",
+            bundle.final_prompt,
+        )
         self.assertNotIn("Ignored seeding", bundle.final_prompt)
+        self.assertNotIn("Select the seed source and density from the retrieved records", bundle.final_prompt)
         self.assertNotIn("If an exact paper technique is too specialized", bundle.final_prompt)
         self.assertNotIn("add a concise code comment naming the seeding strategy", bundle.final_prompt)
 
@@ -106,6 +111,10 @@ class QueryPromptingTests(unittest.TestCase):
         self.assertIn("host process will attach the returned vtkRenderer", bundle.final_prompt)
         self.assertIn("Do not create a vtkRenderWindow", bundle.final_prompt)
         self.assertIn("Do not call Start(), Initialize(), Render()", bundle.final_prompt)
+        self.assertIn(
+            "Select the seed source and density from the retrieved records and the dataset metadata.",
+            bundle.final_prompt,
+        )
         self.assertIn("add a concise code comment naming the seeding strategy", bundle.final_prompt)
 
 

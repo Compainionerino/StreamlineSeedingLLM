@@ -124,6 +124,9 @@ def build_final_prompt(
                 "- At the point where seeds are created or configured, add a concise code comment naming the seeding strategy being used.",
             ]
         )
+    seed_source_guidance = "Select the seed source and density from the retrieved records and the dataset metadata."
+    if not rag_enabled:
+        seed_source_guidance = "Select the seed source and density from the dataset metadata and the user request."
 
     prompt = f"""You are generating pure Python VTK code for a local PySide6 + VTK desktop application.
 
@@ -163,7 +166,7 @@ Retrieved seeding records:
 {records_markdown(records)}
 
 Implementation guidance:
-- Select the seed source and density from the retrieved records and the dataset metadata.
+- {seed_source_guidance}
 - Use vector arrays when available. If active vectors are missing, look for a 3-component point or cell array.
 - Add visible context geometry for the dataset when useful, such as outline, surface, or volume bounds.
 - Color streamlines by scalar/vector magnitude where possible.
