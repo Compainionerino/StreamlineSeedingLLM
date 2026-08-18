@@ -8,9 +8,10 @@
 
 
 ## Features:
-- Flow direction and flow Plane, vortices 
+- General flow overview of Dataset
+- Vortex diagonal to the Domain
 - Flow velocity differentiation, velocity magnitude decreases the farther the streamline travels towards the bounds
-
+- Correct use of colormap
 
 >## Explorative User Query for this Dataset
 >

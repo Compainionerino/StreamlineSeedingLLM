@@ -59,11 +59,7 @@
 >
 >**Target Feature:**
 >
->Explore the Datasets flow dynamics by using sufficient amounts of Streamlines. The Data is of the model of a train and the flow is on top of the surface.
->Flow source at bottom right of model.
->Surface flow of the whole model.
->Show the solid grid correctly.
->Color the streamlines with a fitting colormap.
+>Explore the dataset’s flow dynamics using a sufficient number of streamlines. The data represents surface flow over a train model, so the visualization should clearly show the flow across the entire surface of the model. Make sure the flow source at the bottom right of the model is visible, and ensure that the solid geometry or surface grid of the train is displayed correctly.
 >
 >**(Data dimension:)**
 >    
@@ -87,4 +83,4 @@
 >
 >**Notes:**
 >
->Please also consider that you can use a colormap for better visual clarity.
+>Please also consider that you can use a colormap for better visual clarity. Make sure that the streamlines are rendered on top of the solid mesh.

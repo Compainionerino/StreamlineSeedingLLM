@@ -8,8 +8,10 @@
 
 
 ## Features:
-- Two parts of the dataset, on the one hand vortex like flow on the left, and on the other regular flow on the right
-- Show the different magnitude of vectors on the left side compared to the right side
+- Turbulent vortical flow in low-x region
+- Less turbulent, partially laminar flow in the high-x region 
+- Clear separation between both flow regions
+- Different magnitude of vectors in low-x region vs high-x region visualized via colormap
 
 
 
@@ -22,7 +24,7 @@
 >**Target Feature:**
 >
 >Explore the Datasets flow dynamics by using sufficient amounts of Streamlines. 
-
+>
 >**(Data dimension:)**
 >    
 >2D 
@@ -56,7 +58,7 @@
 >
 >The dataset contains two distinct flow regions: a vortex-like flow in the lower x-region and a more regular flow in the higher x-region.
 >Show the different magnitude of vectors on the left side compared to the right side
-
+>
 >**(Data dimension:)**
 >    
 >2D 

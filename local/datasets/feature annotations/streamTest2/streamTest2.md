@@ -7,9 +7,10 @@
 ![alt text](image.png)
 
 ## Features:
-- Flow disturbance z-Plane  
-- Regular flow inside the grid
-
+- turbulent flow at z-Border of Domain
+- drop of streamlines at domain curve
+- laminar flow inside the grid
+- colormap represents velocity
 
 ## Explorative User Query for this Dataset
 
@@ -57,8 +58,8 @@
 >
 >**Target Feature:**
 >
->The turbulence of interest is located near the boundary of the dataset in the positive (z)-direction.
->
+>The turbulence of interest is located near the boundary of the dataset in the positive (z)-direction. 
+>The general flow pattern of the field is also important, so the visualization should capture the overall flow dynamics in addition to the specific features of interest.
 >**(Data dimension:)**
 >    
 >3D
@@ -81,4 +82,4 @@
 >
 >**Notes:**
 >
->Please also consider that you can use a colormap for better visual clarity.
+>Please also consider that you can use a colormap for better visual clarity. The domain is curved, make sure the seed points are located inside the domain. 

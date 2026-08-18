@@ -10,11 +10,8 @@
 ## Features:
 - Flow towards vent
 - lower magnitude flow at bottom
-- Show the solid structures from the data correctly
+- good coverage of whole flow field
 
-
-## Question:
-Should I provide the points for the surfaces? How much context for the dataset?
 
 ## Explorative Query for this Dataset
 

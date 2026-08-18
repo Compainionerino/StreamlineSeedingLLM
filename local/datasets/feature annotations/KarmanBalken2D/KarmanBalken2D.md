@@ -7,9 +7,11 @@
 
 
 ## Features:
-- Show straight flow at start and then disturbed flow at the end
-- Show different magnitudes of flow velocity
-- Show the solid block contained in the data
+- Laminar Flow at low-x region
+- Laminar Flow at regions without distruption
+- Obstruction visualized
+- Turbulent Flow after obstruction visible
+- usage of colormap differentiates turbulent from laminar regions
 
 
 
@@ -22,7 +24,7 @@
 >
 >**Target Feature:**
 >
->Explore the Datasets flow dynamics by using sufficient amounts of Streamlines. The Data contains a solid block that obstructs the flow of the field please try to visualize this block.
+>Explore the dataset’s flow dynamics using a sufficient number of streamlines. The dataset contains an obstruction, and the visualization should clearly show how the flow behaves around it.
 >
 >
 >**(Data dimension:)**
@@ -55,9 +57,7 @@
 >
 >**Target Feature:**
 >
->Explore the Datasets flow dynamics by using sufficient amounts of Streamlines. The Data contains a solid block that obstructs the flow of the field please try to visualize this block.
->Show different magnitudes of flow velocity
->Show straight flow at start and then disturbed flow at the end
+>Visualize the dataset’s flow dynamics using a sufficient number of streamlines. The visualization should clearly show laminar flow in the low-x region as well as in regions that are not affected by disturbances. The obstruction in the flow field should be clearly visible, and the turbulent flow that develops downstream of the obstruction should also be recognizable. The chosen colormap should differentiate the turbulent flow regions from the regions with laminar flow.
 >
 >**(Data dimension:)**
 >    
