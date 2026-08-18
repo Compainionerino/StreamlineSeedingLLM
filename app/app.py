@@ -3,6 +3,7 @@
 import json
 import shutil
 import sys
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -1403,6 +1404,7 @@ if GUI_IMPORT_ERROR is None:
             rag_enabled = self.rag_enabled()
             current_payload = self.current_retrieval_payload_for_rag_state()
             current_bundle = self.current_prompt_bundle_for_rag_state()
+            prompt_editor_text = self.prompt_text.toPlainText()
             top_k = self.top_k.value()
 
             def work(update_status: Callable[[str], None]) -> dict[str, Any]:
@@ -1426,6 +1428,9 @@ if GUI_IMPORT_ERROR is None:
                         retrieval_payload=retrieval_payload,
                         rag_enabled=rag_enabled,
                     )
+                elif prompt_editor_text != prompt_bundle.final_prompt:
+                    update_status("Using edited prompt text from the Prompt tab...")
+                    prompt_bundle = replace(prompt_bundle, final_prompt=prompt_editor_text)
                 resolved_model = normalize_model_name(settings.model, settings.provider)
                 update_status(f"Calling LLM: waiting for response from {resolved_model}...")
                 response = generate_code(prompt_bundle.final_prompt, settings)

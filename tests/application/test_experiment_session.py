@@ -3,8 +3,12 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app import app as app_module
+from app.llm import LLMResponse
+from app.prompting import PromptBundle
+from app.query import UserRequest
 from app.session_store import default_viewport_image_path
 
 
@@ -131,6 +135,88 @@ class ExperimentSessionTests(unittest.TestCase):
         self.assertFalse(fake_window.preview_cleared)
         self.assertTrue(fake_window.label_updated)
         self.assertTrue(fake_window.autosaved)
+
+    @unittest.skipIf(app_module.GUI_IMPORT_ERROR is not None, "PySide6 is unavailable")
+    def test_generate_vtk_code_sends_edited_prompt_tab_text(self) -> None:
+        class FakeText:
+            def __init__(self, value: str) -> None:
+                self.value = value
+
+            def text(self) -> str:
+                return self.value
+
+            def toPlainText(self) -> str:
+                return self.value
+
+        class FakeSpinBox:
+            def __init__(self, value: int | float) -> None:
+                self._value = value
+
+            def value(self) -> int | float:
+                return self._value
+
+        class FakeWindow:
+            def __init__(self) -> None:
+                self.retriever = None
+                self.model_name = FakeText("fake-model")
+                self.api_key = FakeText("secret")
+                self.api_base = FakeText("")
+                self.temperature = FakeSpinBox(0.2)
+                self.max_tokens = FakeSpinBox(128)
+                self.top_k = FakeSpinBox(3)
+                self.prompt_text = FakeText("edited prompt from the Prompt tab")
+                self.prompt_bundle = PromptBundle(
+                    retrieval_query="streamlines",
+                    final_prompt="original generated prompt",
+                    selected_records=[],
+                    rag_enabled=True,
+                )
+                self.retrieval_payload = {"results": []}
+                self.background_result = None
+
+            def current_request(self) -> UserRequest:
+                return UserRequest(visualization_goal="Show streamlines.")
+
+            def metadata_payload(self) -> dict:
+                return {}
+
+            def current_provider_id(self) -> str:
+                return "custom"
+
+            def rag_enabled(self) -> bool:
+                return True
+
+            def current_retrieval_payload_for_rag_state(self) -> dict:
+                return self.retrieval_payload
+
+            def current_prompt_bundle_for_rag_state(self) -> PromptBundle:
+                return self.prompt_bundle
+
+            def run_background_task(self, **kwargs) -> None:
+                self.background_result = kwargs["work"](lambda _status: None)
+
+            def apply_llm_result(self, result: dict) -> None:
+                self.background_result = result
+
+            def show_error(self, title: str, message: str) -> None:
+                raise AssertionError(f"Unexpected error: {title}: {message}")
+
+        fake_window = FakeWindow()
+        llm_response = LLMResponse(
+            content="import vtk",
+            code="import vtk",
+            model="fake-model",
+        )
+
+        with patch("app.app.generate_code", return_value=llm_response) as generate_code:
+            app_module.MainWindow.generate_vtk_code(fake_window)
+
+        sent_prompt = generate_code.call_args.args[0]
+        self.assertEqual(sent_prompt, "edited prompt from the Prompt tab")
+        self.assertEqual(
+            fake_window.background_result["prompt_bundle"].final_prompt,
+            "edited prompt from the Prompt tab",
+        )
 
 
 if __name__ == "__main__":
