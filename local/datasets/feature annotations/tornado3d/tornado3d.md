@@ -8,6 +8,7 @@
 
 ## Features:
 - Show the whole tornado
+- Good spacing across whole domain
 - Correctly calculate the vectors by multiplying with the respective unit vectors
 - Color by magnitude and choose colormap correctly
 
