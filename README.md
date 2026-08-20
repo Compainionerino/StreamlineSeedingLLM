@@ -157,6 +157,23 @@ The default report path is:
 artifacts/reports/evaluation.json
 ```
 
+## Experiment Analysis Dashboard
+
+Aggregate saved experiment sessions and build a local comparison dashboard:
+
+```powershell
+.\.venv\Scripts\python.exe -m rag.cli.analyze_experiments
+```
+
+The dashboard and analysis exports are written to:
+
+```text
+artifacts/reports/experiment_dashboard/index.html
+artifacts/reports/experiment_dashboard/data/
+```
+
+The generated data folder includes raw runs, one primary run per condition, RAG-vs-no-RAG pairs, explorative-vs-feature-aware pairs, grouped summaries, and a dataset feature rubric template. Duplicate conditions are resolved with the latest saved session by default; pass `--primary-strategy best` to select the highest-scoring run per condition instead.
+
 ## Tests
 
 Run the unit tests:

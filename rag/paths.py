@@ -8,3 +8,6 @@ DEFAULT_BGE_INDEX_DIR = "artifacts/indexes/bge"
 DEFAULT_AUDIT_REPORT_PATH = "artifacts/reports/data_audit.json"
 DEFAULT_DERIVED_VOCABULARY_PATH = "artifacts/reports/derived_tag_vocabulary.json"
 DEFAULT_EVALUATION_REPORT_PATH = "artifacts/reports/evaluation.json"
+
+DEFAULT_EXPERIMENT_SESSION_ROOT = "local/sessions"
+DEFAULT_EXPERIMENT_REPORT_DIR = "artifacts/reports/experiment_dashboard"
