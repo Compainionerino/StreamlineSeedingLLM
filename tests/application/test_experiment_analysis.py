@@ -37,6 +37,14 @@ class ExperimentAnalysisTests(unittest.TestCase):
                 seeding=8,
                 image_path=image.name,
             )
+            self._write_session(
+                sessions / "last_session.json",
+                provider="blablador",
+                model_name="alias-code",
+                rag_enabled=True,
+                features=9,
+                seeding=9,
+            )
 
             report = build_experiment_report(
                 sessions,
@@ -51,9 +59,12 @@ class ExperimentAnalysisTests(unittest.TestCase):
             self.assertEqual(report["rag_pairs"][0]["success_effect"], "same")
             self.assertEqual(report["rag_pairs"][0]["delta_first_try_success"], 0)
             self.assertEqual(report["rag_pairs"][0]["first_try_effect"], "same")
+            self.assertEqual(report["rag_pairs"][0]["rag_on_strategy_category"], "strategy_used")
+            self.assertEqual(report["rag_pairs"][0]["rag_on_strategy_label"], "RAG: strategy used")
             self.assertEqual(report["rag_pairs"][0]["delta_features"], 2.0)
             self.assertEqual(report["rag_pairs"][0]["delta_seeding"], 3.0)
             self.assertTrue(report["records"][0]["first_try_success"])
+            self.assertEqual(report["records"][0]["rag_strategy_category"], "no_rag")
             self.assertEqual(report["records"][0]["model"], "alias-code")
 
             output = root / "local" / "reports" / "experiment_dashboard"

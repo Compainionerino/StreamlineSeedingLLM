@@ -92,6 +92,21 @@ function boolBadge(value, label) {
   return `<span class="badge ${value ? "good" : "bad"}">${label}: ${value ? "yes" : "no"}</span>`;
 }
 
+function strategyBadge(record) {
+  if (!record.rag_enabled) return "";
+  const cls = record.rag_strategy_category === "strategy_used"
+    ? "good"
+    : record.rag_strategy_category === "strategy_ignored"
+      ? "warn"
+      : "bad";
+  const shortLabel = {
+    strategy_used: "used",
+    strategy_ignored: "ignored",
+    unclear_failed: "unclear"
+  }[record.rag_strategy_category] || "unclear";
+  return `<span class="badge ${cls}">strategy: ${escapeHtml(shortLabel)}</span>`;
+}
+
 function textMatch(record) {
   const q = state.search.trim().toLowerCase();
   if (!q) return true;
@@ -101,6 +116,7 @@ function textMatch(record) {
     record.model,
     record.provider_model,
     record.query_mode,
+    record.rag_strategy_label,
     record.feature_notes,
     record.seeding_notes,
     record.target_feature,
@@ -113,12 +129,32 @@ function recordPasses(record, includeMode = true, includeRag = true) {
   if (!setPasses(state.datasets, record.dataset)) return false;
   if (!setPasses(state.models, record.provider_model)) return false;
   if (includeMode && state.mode !== "all" && record.query_mode !== state.mode) return false;
-  if (includeRag && state.rag !== "all" && String(record.rag_enabled) !== state.rag) return false;
+  if (includeRag && !recordMatchesRagCategory(record)) return false;
   return textMatch(record);
 }
 
 function setPasses(selected, value) {
   return selected.size === 0 || selected.has(value);
+}
+
+function recordMatchesRagCategory(record) {
+  return state.rag === "all" || record.rag_strategy_category === state.rag;
+}
+
+function ragPairMatchesRagCategory(pair) {
+  if (state.rag === "all") return true;
+  if (state.rag === "no_rag") return true;
+  return pair.rag_on_strategy_category === state.rag;
+}
+
+function modePairMatchesRagCategory(pair) {
+  if (state.rag === "all") return true;
+  if (state.rag === "no_rag") return pair.rag_enabled === false;
+  if (!pair.rag_enabled) return false;
+  return (
+    pair.explorative.rag_strategy_category === state.rag ||
+    pair.feature_aware.rag_strategy_category === state.rag
+  );
 }
 
 function pairTextMatches(...records) {
@@ -129,13 +165,14 @@ function ragPairPasses(pair) {
   if (!setPasses(state.datasets, pair.dataset)) return false;
   if (!setPasses(state.models, pair.provider_model)) return false;
   if (state.mode !== "all" && pair.query_mode !== state.mode) return false;
+  if (!ragPairMatchesRagCategory(pair)) return false;
   return pairTextMatches(pair.rag_off, pair.rag_on);
 }
 
 function modePairPasses(pair) {
   if (!setPasses(state.datasets, pair.dataset)) return false;
   if (!setPasses(state.models, pair.provider_model)) return false;
-  if (state.rag !== "all" && String(pair.rag_enabled) !== state.rag) return false;
+  if (!modePairMatchesRagCategory(pair)) return false;
   return pairTextMatches(pair.explorative, pair.feature_aware);
 }
 
@@ -175,6 +212,21 @@ function firstTryRate(records) {
 
 function firstTryNote(records) {
   return `${records.filter(record => record.first_try_success).length} / ${records.length} first try`;
+}
+
+function strategyAdoptionRate(records) {
+  const used = records.filter(record => record.rag_strategy_category === "strategy_used").length;
+  const ignored = records.filter(record => record.rag_strategy_category === "strategy_ignored").length;
+  const assessable = used + ignored;
+  if (!assessable) return null;
+  return used / assessable;
+}
+
+function strategyAdoptionNote(records) {
+  const used = records.filter(record => record.rag_strategy_category === "strategy_used").length;
+  const ignored = records.filter(record => record.rag_strategy_category === "strategy_ignored").length;
+  const unclear = records.filter(record => record.rag_strategy_category === "unclear_failed").length;
+  return `${used} used / ${ignored} ignored / ${unclear} unclear`;
 }
 
 function effectDeltaNote(pairs, field) {
@@ -294,6 +346,7 @@ function renderMetrics() {
   const modeDeltaSeeding = average(modePairs.map(pair => pair.delta_seeding));
   const metrics = [
     {label: "Raw runs", value: records.length, note: "matching filters"},
+    {label: "Strategy adoption", value: pct(strategyAdoptionRate(primaryRecords)), note: strategyAdoptionNote(primaryRecords)},
     {label: "Success", value: pct(successRate(primaryRecords)), note: successNote(primaryRecords)},
     {label: "First-try success", value: pct(firstTryRate(primaryRecords)), note: firstTryNote(primaryRecords)},
     {label: "Avg coverage", value: pct(averageField(primaryRecords, "observed_feature_coverage")), note: "selected conditions"},
@@ -374,7 +427,10 @@ function resultHtml(label, record) {
     <div class="result">
       <div class="result-head">
         <strong>${escapeHtml(label)}</strong>
-        ${boolBadge(record.succeeded, "success")}
+        <span class="delta">
+          ${boolBadge(record.succeeded, "success")}
+          ${strategyBadge(record)}
+        </span>
       </div>
       ${thumbHtml(record)}
       <div class="score-row">
@@ -424,7 +480,7 @@ function miniHtml(record) {
       ${thumbHtml(record)}
       <div class="mini-meta">
         <strong>${escapeHtml(record.provider_model)}</strong>
-        <span>${escapeHtml(record.query_mode)} - ${record.rag_enabled ? "RAG on" : "RAG off"}</span>
+        <span>${escapeHtml(record.query_mode)} - ${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))}</span>
         <span>F ${fmt(record.features_recognized, 0)} | S ${fmt(record.seeding_score, 1)}</span>
       </div>
     </article>
@@ -434,13 +490,13 @@ function miniHtml(record) {
 function renderRunsTable() {
   const filtered = data.records.filter(record => recordPasses(record));
   els.runsCount.textContent = `${filtered.length} runs`;
-  const header = ["Dataset", "Model", "Mode", "RAG", "Success", "Features", "Seeding", "Attempts", "Image"];
+  const header = ["Dataset", "Model", "Mode", "RAG category", "Success", "Features", "Seeding", "Attempts", "Image"];
   const rows = filtered.map(record => `
     <tr>
       <td>${escapeHtml(record.dataset)}</td>
       <td>${escapeHtml(record.provider_model)}</td>
       <td>${escapeHtml(record.query_mode)}</td>
-      <td>${record.rag_enabled ? "on" : "off"}</td>
+      <td>${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))}</td>
       <td>${record.succeeded ? "yes" : "no"}</td>
       <td>${fmt(record.features_recognized, 0)}</td>
       <td>${fmt(record.seeding_score, 1)}</td>
@@ -452,7 +508,7 @@ function renderRunsTable() {
 }
 
 function renderSummary() {
-  const scopes = new Set(["primary_by_rag", "primary_by_mode", "primary_by_provider", "primary_by_dataset"]);
+  const scopes = new Set(["primary_by_rag_strategy", "primary_by_mode", "primary_by_provider", "primary_by_dataset"]);
   const rows = data.group_summaries.filter(row => scopes.has(row.scope));
   els.summaryBars.innerHTML = rows.map(row => `
     <div class="bar-row">
@@ -487,7 +543,7 @@ function openDetail(id) {
   if (!record) return;
   els.detailContent.innerHTML = `
     <h2>${escapeHtml(record.dataset)} - ${escapeHtml(record.provider_model)}</h2>
-    <p class="report-meta">${escapeHtml(record.query_mode)} - ${record.rag_enabled ? "RAG on" : "RAG off"} - ${escapeHtml(record.saved_at || "")}</p>
+    <p class="report-meta">${escapeHtml(record.query_mode)} - ${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))} - ${escapeHtml(record.saved_at || "")}</p>
     ${record.has_image ? `<img class="detail-image" src="${escapeAttr(record.image_url)}" alt="">` : `<div class="thumb"><span class="missing">No viewport image</span></div>`}
     <div class="score-row">
       ${scoreHtml("Success", record.succeeded ? "yes" : "no")}

@@ -19,6 +19,8 @@ RUN_CSV_FIELDS = [
     "model",
     "query_mode",
     "rag_enabled",
+    "rag_strategy_category",
+    "rag_strategy_label",
     "succeeded",
     "first_try_success",
     "features_recognized",
@@ -53,6 +55,8 @@ RAG_PAIR_CSV_FIELDS = [
     "rag_on_first_try_success",
     "delta_first_try_success",
     "first_try_effect",
+    "rag_on_strategy_category",
+    "rag_on_strategy_label",
     "rag_off_features",
     "rag_on_features",
     "delta_features",
@@ -149,6 +153,8 @@ def load_experiment_records(
 
     records = []
     for path in sorted(session_root_path.rglob("*.json")):
+        if path.name == "last_session.json":
+            continue
         payload = _load_json(path)
         if not isinstance(payload, dict) or not isinstance(payload.get("experiment"), dict):
             continue
@@ -292,6 +298,8 @@ def build_rag_pairs(records: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
             "rag_on_first_try_success": on["first_try_success"],
             "delta_first_try_success": int(bool(on["first_try_success"])) - int(bool(off["first_try_success"])),
             "first_try_effect": _success_effect(off["first_try_success"], on["first_try_success"]),
+            "rag_on_strategy_category": on["rag_strategy_category"],
+            "rag_on_strategy_label": on["rag_strategy_label"],
             "rag_off_features": off["features_recognized"],
             "rag_on_features": on["features_recognized"],
             "delta_features": _round(on["features_recognized"] - off["features_recognized"]),
@@ -421,6 +429,7 @@ def build_group_summaries(
     summaries = []
     group_specs = [
         ("primary_by_rag", primary_records, ("rag_enabled",)),
+        ("primary_by_rag_strategy", primary_records, ("rag_strategy_label",)),
         ("primary_by_mode", primary_records, ("query_mode",)),
         ("primary_by_provider", primary_records, ("provider",)),
         ("primary_by_provider_model", primary_records, ("provider", "model")),
@@ -528,6 +537,8 @@ def slim_record(record: Mapping[str, Any]) -> dict[str, Any]:
         "provider_model",
         "query_mode",
         "rag_enabled",
+        "rag_strategy_category",
+        "rag_strategy_label",
         "succeeded",
         "first_try_success",
         "features_recognized",
@@ -638,6 +649,12 @@ def _record_from_session(
     rag_enabled = bool(_bool(rag.get("enabled")))
     succeeded = bool(_bool(experiment.get("succeeded")))
     attempts = int(_number(experiment.get("attempts")))
+    suggested_seeding_value = experiment.get("suggested_seeding_used")
+    rag_strategy_category, rag_strategy_label = _rag_strategy_category(
+        rag_enabled,
+        succeeded,
+        suggested_seeding_value,
+    )
 
     image_path = _find_image_path(experiment.get("viewport_image"), session_path, repo_root)
     code_path = _path_from_reference(last_artifacts.get("code_path"), session_path.parent, repo_root)
@@ -659,6 +676,8 @@ def _record_from_session(
         "provider_model": provider_model,
         "query_mode": query_mode,
         "rag_enabled": rag_enabled,
+        "rag_strategy_category": rag_strategy_category,
+        "rag_strategy_label": rag_strategy_label,
         "succeeded": succeeded,
         "first_try_success": succeeded and attempts == 1,
         "features_recognized": int(_number(experiment.get("features_recognized"))),
@@ -667,7 +686,7 @@ def _record_from_session(
         "seeding_score": _number(experiment.get("seeding_score")),
         "attempts": attempts,
         "colormap_used": bool(_bool(experiment.get("colormap_used"))),
-        "suggested_seeding_used": bool(_bool(experiment.get("suggested_seeding_used"))),
+        "suggested_seeding_used": bool(_bool(suggested_seeding_value)),
         "has_image": image_exists,
         "duplicate_count": 1,
         "is_primary": False,
@@ -821,6 +840,20 @@ def _success_effect(rag_off_success: bool, rag_on_success: bool) -> str:
     if delta < 0:
         return "hurt"
     return "same"
+
+
+def _rag_strategy_category(
+    rag_enabled: bool,
+    succeeded: bool,
+    suggested_seeding_value: Any,
+) -> tuple[str, str]:
+    if not rag_enabled:
+        return "no_rag", "No RAG"
+    if not succeeded or suggested_seeding_value is None:
+        return "unclear_failed", "RAG: unclear / failed"
+    if _bool(suggested_seeding_value):
+        return "strategy_used", "RAG: strategy used"
+    return "strategy_ignored", "RAG: strategy ignored"
 
 
 def _load_json(path: Path) -> Any:
@@ -1014,8 +1047,10 @@ def dashboard_html() -> str:
       <span>RAG</span>
       <select id="ragFilter">
         <option value="all">All</option>
-        <option value="true">RAG on</option>
-        <option value="false">RAG off</option>
+        <option value="no_rag">No RAG</option>
+        <option value="strategy_used">RAG: strategy used</option>
+        <option value="strategy_ignored">RAG: strategy ignored</option>
+        <option value="unclear_failed">RAG: unclear / failed</option>
       </select>
     </label>
     <label class="search">
@@ -1870,6 +1905,21 @@ function boolBadge(value, label) {
   return `<span class="badge ${value ? "good" : "bad"}">${label}: ${value ? "yes" : "no"}</span>`;
 }
 
+function strategyBadge(record) {
+  if (!record.rag_enabled) return "";
+  const cls = record.rag_strategy_category === "strategy_used"
+    ? "good"
+    : record.rag_strategy_category === "strategy_ignored"
+      ? "warn"
+      : "bad";
+  const shortLabel = {
+    strategy_used: "used",
+    strategy_ignored: "ignored",
+    unclear_failed: "unclear"
+  }[record.rag_strategy_category] || "unclear";
+  return `<span class="badge ${cls}">strategy: ${escapeHtml(shortLabel)}</span>`;
+}
+
 function textMatch(record) {
   const q = state.search.trim().toLowerCase();
   if (!q) return true;
@@ -1879,6 +1929,7 @@ function textMatch(record) {
     record.model,
     record.provider_model,
     record.query_mode,
+    record.rag_strategy_label,
     record.feature_notes,
     record.seeding_notes,
     record.target_feature,
@@ -1891,12 +1942,32 @@ function recordPasses(record, includeMode = true, includeRag = true) {
   if (!setPasses(state.datasets, record.dataset)) return false;
   if (!setPasses(state.models, record.provider_model)) return false;
   if (includeMode && state.mode !== "all" && record.query_mode !== state.mode) return false;
-  if (includeRag && state.rag !== "all" && String(record.rag_enabled) !== state.rag) return false;
+  if (includeRag && !recordMatchesRagCategory(record)) return false;
   return textMatch(record);
 }
 
 function setPasses(selected, value) {
   return selected.size === 0 || selected.has(value);
+}
+
+function recordMatchesRagCategory(record) {
+  return state.rag === "all" || record.rag_strategy_category === state.rag;
+}
+
+function ragPairMatchesRagCategory(pair) {
+  if (state.rag === "all") return true;
+  if (state.rag === "no_rag") return true;
+  return pair.rag_on_strategy_category === state.rag;
+}
+
+function modePairMatchesRagCategory(pair) {
+  if (state.rag === "all") return true;
+  if (state.rag === "no_rag") return pair.rag_enabled === false;
+  if (!pair.rag_enabled) return false;
+  return (
+    pair.explorative.rag_strategy_category === state.rag ||
+    pair.feature_aware.rag_strategy_category === state.rag
+  );
 }
 
 function pairTextMatches(...records) {
@@ -1907,13 +1978,14 @@ function ragPairPasses(pair) {
   if (!setPasses(state.datasets, pair.dataset)) return false;
   if (!setPasses(state.models, pair.provider_model)) return false;
   if (state.mode !== "all" && pair.query_mode !== state.mode) return false;
+  if (!ragPairMatchesRagCategory(pair)) return false;
   return pairTextMatches(pair.rag_off, pair.rag_on);
 }
 
 function modePairPasses(pair) {
   if (!setPasses(state.datasets, pair.dataset)) return false;
   if (!setPasses(state.models, pair.provider_model)) return false;
-  if (state.rag !== "all" && String(pair.rag_enabled) !== state.rag) return false;
+  if (!modePairMatchesRagCategory(pair)) return false;
   return pairTextMatches(pair.explorative, pair.feature_aware);
 }
 
@@ -1953,6 +2025,21 @@ function firstTryRate(records) {
 
 function firstTryNote(records) {
   return `${records.filter(record => record.first_try_success).length} / ${records.length} first try`;
+}
+
+function strategyAdoptionRate(records) {
+  const used = records.filter(record => record.rag_strategy_category === "strategy_used").length;
+  const ignored = records.filter(record => record.rag_strategy_category === "strategy_ignored").length;
+  const assessable = used + ignored;
+  if (!assessable) return null;
+  return used / assessable;
+}
+
+function strategyAdoptionNote(records) {
+  const used = records.filter(record => record.rag_strategy_category === "strategy_used").length;
+  const ignored = records.filter(record => record.rag_strategy_category === "strategy_ignored").length;
+  const unclear = records.filter(record => record.rag_strategy_category === "unclear_failed").length;
+  return `${used} used / ${ignored} ignored / ${unclear} unclear`;
 }
 
 function effectDeltaNote(pairs, field) {
@@ -2072,6 +2159,7 @@ function renderMetrics() {
   const modeDeltaSeeding = average(modePairs.map(pair => pair.delta_seeding));
   const metrics = [
     {label: "Raw runs", value: records.length, note: "matching filters"},
+    {label: "Strategy adoption", value: pct(strategyAdoptionRate(primaryRecords)), note: strategyAdoptionNote(primaryRecords)},
     {label: "Success", value: pct(successRate(primaryRecords)), note: successNote(primaryRecords)},
     {label: "First-try success", value: pct(firstTryRate(primaryRecords)), note: firstTryNote(primaryRecords)},
     {label: "Avg coverage", value: pct(averageField(primaryRecords, "observed_feature_coverage")), note: "selected conditions"},
@@ -2152,7 +2240,10 @@ function resultHtml(label, record) {
     <div class="result">
       <div class="result-head">
         <strong>${escapeHtml(label)}</strong>
-        ${boolBadge(record.succeeded, "success")}
+        <span class="delta">
+          ${boolBadge(record.succeeded, "success")}
+          ${strategyBadge(record)}
+        </span>
       </div>
       ${thumbHtml(record)}
       <div class="score-row">
@@ -2202,7 +2293,7 @@ function miniHtml(record) {
       ${thumbHtml(record)}
       <div class="mini-meta">
         <strong>${escapeHtml(record.provider_model)}</strong>
-        <span>${escapeHtml(record.query_mode)} - ${record.rag_enabled ? "RAG on" : "RAG off"}</span>
+        <span>${escapeHtml(record.query_mode)} - ${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))}</span>
         <span>F ${fmt(record.features_recognized, 0)} | S ${fmt(record.seeding_score, 1)}</span>
       </div>
     </article>
@@ -2212,13 +2303,13 @@ function miniHtml(record) {
 function renderRunsTable() {
   const filtered = data.records.filter(record => recordPasses(record));
   els.runsCount.textContent = `${filtered.length} runs`;
-  const header = ["Dataset", "Model", "Mode", "RAG", "Success", "Features", "Seeding", "Attempts", "Image"];
+  const header = ["Dataset", "Model", "Mode", "RAG category", "Success", "Features", "Seeding", "Attempts", "Image"];
   const rows = filtered.map(record => `
     <tr>
       <td>${escapeHtml(record.dataset)}</td>
       <td>${escapeHtml(record.provider_model)}</td>
       <td>${escapeHtml(record.query_mode)}</td>
-      <td>${record.rag_enabled ? "on" : "off"}</td>
+      <td>${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))}</td>
       <td>${record.succeeded ? "yes" : "no"}</td>
       <td>${fmt(record.features_recognized, 0)}</td>
       <td>${fmt(record.seeding_score, 1)}</td>
@@ -2230,7 +2321,7 @@ function renderRunsTable() {
 }
 
 function renderSummary() {
-  const scopes = new Set(["primary_by_rag", "primary_by_mode", "primary_by_provider", "primary_by_dataset"]);
+  const scopes = new Set(["primary_by_rag_strategy", "primary_by_mode", "primary_by_provider", "primary_by_dataset"]);
   const rows = data.group_summaries.filter(row => scopes.has(row.scope));
   els.summaryBars.innerHTML = rows.map(row => `
     <div class="bar-row">
@@ -2265,7 +2356,7 @@ function openDetail(id) {
   if (!record) return;
   els.detailContent.innerHTML = `
     <h2>${escapeHtml(record.dataset)} - ${escapeHtml(record.provider_model)}</h2>
-    <p class="report-meta">${escapeHtml(record.query_mode)} - ${record.rag_enabled ? "RAG on" : "RAG off"} - ${escapeHtml(record.saved_at || "")}</p>
+    <p class="report-meta">${escapeHtml(record.query_mode)} - ${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))} - ${escapeHtml(record.saved_at || "")}</p>
     ${record.has_image ? `<img class="detail-image" src="${escapeAttr(record.image_url)}" alt="">` : `<div class="thumb"><span class="missing">No viewport image</span></div>`}
     <div class="score-row">
       ${scoreHtml("Success", record.succeeded ? "yes" : "no")}
