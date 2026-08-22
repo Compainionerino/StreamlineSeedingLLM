@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Experiment Evaluation Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Streamline seeding RAG evaluation</p>
+      <h1>Experiment Evaluation Dashboard</h1>
+    </div>
+    <div class="report-meta" id="reportMeta"></div>
+  </header>
+
+  <section class="metrics" id="metrics"></section>
+
+  <section class="controls" aria-label="Filters">
+    <div class="filter-control multi-filter">
+      <span>Dataset</span>
+      <div class="multi-select" id="datasetMulti">
+        <button id="datasetTrigger" class="multi-trigger" type="button" aria-haspopup="true" aria-expanded="false">All datasets</button>
+        <div id="datasetMenu" class="multi-menu"></div>
+      </div>
+    </div>
+    <div class="filter-control multi-filter">
+      <span>Model</span>
+      <div class="multi-select" id="modelMulti">
+        <button id="modelTrigger" class="multi-trigger" type="button" aria-haspopup="true" aria-expanded="false">All models</button>
+        <div id="modelMenu" class="multi-menu"></div>
+      </div>
+    </div>
+    <label>
+      <span>Mode</span>
+      <select id="modeFilter"></select>
+    </label>
+    <label>
+      <span>RAG</span>
+      <select id="ragFilter">
+        <option value="all">All</option>
+        <option value="no_rag">No RAG</option>
+        <option value="strategy_used">RAG: strategy used</option>
+        <option value="strategy_ignored">RAG: strategy ignored</option>
+        <option value="unclear_failed">RAG: unclear / failed</option>
+      </select>
+    </label>
+    <label class="search">
+      <span>Search</span>
+      <input id="searchFilter" type="search" autocomplete="off">
+    </label>
+  </section>
+
+  <nav class="tabs" aria-label="Report sections">
+    <button type="button" class="active" data-tab="rag">RAG Pairs</button>
+    <button type="button" data-tab="mode">Mode Pairs</button>
+    <button type="button" data-tab="matrix">Matrix</button>
+    <button type="button" data-tab="runs">Runs</button>
+    <button type="button" data-tab="summary">Summary</button>
+  </nav>
+
+  <section class="tab-panel active" id="tab-rag">
+    <div class="section-head">
+      <h2>RAG Paired Comparison</h2>
+      <div class="count" id="ragCount"></div>
+    </div>
+    <div class="pair-list" id="ragPairs"></div>
+  </section>
+
+  <section class="tab-panel" id="tab-mode">
+    <div class="section-head">
+      <h2>Prompt Mode Paired Comparison</h2>
+      <div class="count" id="modeCount"></div>
+    </div>
+    <div class="pair-list" id="modePairs"></div>
+  </section>
+
+  <section class="tab-panel" id="tab-matrix">
+    <div class="section-head">
+      <h2>Condition Matrix</h2>
+      <div class="count" id="matrixCount"></div>
+    </div>
+    <div class="matrix" id="matrix"></div>
+  </section>
+
+  <section class="tab-panel" id="tab-runs">
+    <div class="section-head">
+      <h2>Run Table</h2>
+      <div class="count" id="runsCount"></div>
+    </div>
+    <div class="table-wrap">
+      <table id="runsTable"></table>
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-summary">
+    <div class="summary-grid">
+      <div>
+        <h2>Grouped Metrics</h2>
+        <div id="summaryBars" class="bars"></div>
+      </div>
+      <div>
+        <h2>Data Quality</h2>
+        <div id="qualityPanel" class="quality"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<dialog id="detailDialog">
+  <button class="dialog-close" type="button" id="closeDialog" aria-label="Close">x</button>
+  <div id="detailContent"></div>
+</dialog>
+<script src="dashboard-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
