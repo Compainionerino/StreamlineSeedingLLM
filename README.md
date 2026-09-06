@@ -1,44 +1,33 @@
-# Streamline Seeding Retrieval
+# Streamline Seeding LLM/RAG Prototype
 
-Local retrieval for structured streamline seeding application records.
+This project explores whether retrieval-augmented large language models can generate better VTK streamline visualizations. It combines a local retrieval system for streamline seeding knowledge with a desktop application that prompts an LLM, validates the generated Python code, runs it safely, and stores experiment sessions for later analysis.
 
-The tooling covers:
+## Feature Overview
 
-- loading application records from `knowledge_base/records/tagged_applications.jsonl`
-- auditing schema, IDs, tags, vocabulary coverage, and text-quality issues
-- loading `knowledge_base/vocabulary/tag_vocabulary.json` or deriving the observed vocabulary from the data
-- deterministic query tagging from the controlled vocabulary
-- query tagging reuses the same local normalization rules that tagged the corpus records
-- local index building with either BGE sentence-transformer embeddings or a deterministic hashing/TF-IDF fallback
-- hybrid retrieval with embedding similarity, tag overlap, compatibility penalties, and score explanations
+### Desktop Application
 
-## Data Audit
+The desktop application is the main workflow for experiments. It loads VTK datasets, assembles prompts with or without retrieved seeding knowledge, generates visualization code through LiteLLM, validates and executes that code in a subprocess, and saves experiment sessions for later comparison.
 
-```powershell
-.\.venv\Scripts\python.exe -m rag.cli.audit_data
-```
+### RAG System
 
-The default report path is:
+The RAG system indexes structured application records from `knowledge_base/records/tagged_applications.jsonl`. Each record describes a streamline seeding or placement method, including the data type, target visualization task, seeding strategy, parameters, limitations, and source evidence.
 
-```text
-artifacts/reports/data_audit.json
-```
+At query time, the system:
 
-## Vocabulary Derivation
+- tags the user query with the same controlled vocabulary used by the corpus
+- retrieves relevant seeding records from a local embedding index
+- combines embedding similarity, tag overlap, compatibility checks, and penalties
+- returns matching records with score explanations
 
-Print the vocabulary observed in the current corpus:
+Retrieval is local. It does not call an LLM. The default index can use `sentence-transformers` with `BAAI/bge-small-en-v1.5`; a deterministic local hashing backend is also available for development.
 
-```powershell
-.\.venv\Scripts\python.exe -m rag.cli.build_vocabulary
-```
+### Experiment Dashboard
 
-Write the derived vocabulary to a file:
+The experiment dashboard aggregates saved sessions into a local website. It shows raw runs, primary runs, RAG-vs-no-RAG pairs, explorative-vs-feature-aware pairs, grouped summaries, duplicate conditions, missing conditions, and feature-rubric seed data.
 
-```powershell
-.\.venv\Scripts\python.exe -m rag.cli.build_vocabulary --output artifacts/reports/derived_tag_vocabulary.json
-```
+This is useful for inspecting the thesis results and correcting evaluation metadata without manually editing every JSON file.
 
-## Index Building
+## Setup
 
 Create and populate the project virtual environment:
 
@@ -48,22 +37,52 @@ C:\Users\Fabian\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Build the production neural index with BGE:
+## Running the Application
+
+Launch the desktop application:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.cli.launch
+```
+
+In the app:
+
+1. Choose a dataset.
+2. Fill in the visualization request.
+3. Enable or disable RAG.
+4. Select the LLM provider and model.
+5. Generate code.
+6. Review, execute, and save the experiment session.
+
+The app extracts dataset metadata, assembles the final prompt, calls the selected LiteLLM provider, validates the generated code, and executes it in a protected subprocess. Successful runs can be saved with a viewport preview and experiment metadata.
+
+The generated code must define:
+
+```python
+def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
+    """Return a vtkRenderer containing the complete visualization."""
+```
+
+Generated prompts, retrieval snapshots, LLM responses, and code are stored under `local/generated/`. Autosaved and manually saved GUI sessions are stored under `local/sessions/`. API keys are not saved.
+
+## Using the RAG System from the Command Line
+
+Build the default retrieval index:
+
+```powershell
+.\.venv\Scripts\python.exe -m rag.cli.build_index
+```
+
+Build the BGE index explicitly:
 
 ```powershell
 .\.venv\Scripts\python.exe -m rag.cli.build_index --embedding-backend sentence-transformers --model-name BAAI/bge-small-en-v1.5
 ```
 
-After the model has been downloaded once, rebuild fully offline from the local cache:
+After the model has been downloaded once, rebuild from the local cache:
 
 ```powershell
 .\.venv\Scripts\python.exe -m rag.cli.build_index --embedding-backend sentence-transformers --model-name BAAI/bge-small-en-v1.5 --local-files-only
-```
-
-For development only, a deterministic hashing/TF-IDF fallback is still available:
-
-```powershell
-.\.venv\Scripts\python.exe -m rag.cli.build_index --embedding-backend local-hashing
 ```
 
 The index files are:
@@ -74,62 +93,45 @@ artifacts/indexes/default/embeddings.npy
 artifacts/indexes/default/metadata.json
 ```
 
-## Retrieval
+Run retrieval for a query:
 
 ```powershell
 .\.venv\Scripts\python.exe -m rag.cli.retrieve "I have a 3D CFD flow field and want to seed streamlines around vortices without too much clutter." --pretty
 ```
 
-Full JSON is printed by default:
+Without `--pretty`, the command prints the full JSON payload:
 
 ```powershell
 .\.venv\Scripts\python.exe -m rag.cli.retrieve "I need streamline seeds for 2D critical points"
 ```
 
-Input-query tags are produced by applying the same corpus normalization rule set to the query text. This keeps query tags and record tags aligned; no separate query-only regex vocabulary is used.
-
-## Local VTK Seeding RAG App
-
-Launch the desktop application:
+For development only, a deterministic hashing/TF-IDF fallback is available:
 
 ```powershell
-.\.venv\Scripts\python.exe -m app.cli.launch
+.\.venv\Scripts\python.exe -m rag.cli.build_index --embedding-backend local-hashing
 ```
 
-The app provides:
+## API Keys
 
-- a structured visualization request form aligned with the retrieval records
-- VTK-native dataset metadata extraction for `.vtk`, `.vti`, `.vtu`, `.vtp`, `.vts`, and `.vtr`
-- local retrieval over the existing seeding index
-- optional RAG use, allowing final prompts to be built either with retrieved seeding records or only from dataset metadata and user intent
-- final prompt assembly from dataset metadata, user intent, and selected structured record fields when RAG is enabled
-- LiteLLM-based provider/model switching for code generation, including OpenAI, Anthropic, Gemini, Blablador, and custom LiteLLM-compatible endpoints
-- default code generation with `anthropic/claude-opus-5`, a 50,000 token output budget adjustable up to 200,000 tokens, automatic continuation on truncation, and two validation-repair attempts
-- compact terminal logging of each LLM call stack, including finish reasons, provider-reported input/output token counts, and aggregate token totals when available
-- explicit confirmation before generated VTK code is executed
-- isolated generated-code smoke testing in a subprocess so VTK/Qt crashes do not terminate the main app
-- a safe PNG preview rendered by the subprocess
-- an interactive VTK viewport launched in a monitored child process; if that window crashes, the main app stays open and reports the child-process exit
-- interactive viewport stdout/stderr mirrored to the launching terminal for easier copying/debugging
-- automatic last-session restore for the dataset path, request fields, retrieval state, prompt, generated code, and non-secret LLM settings
-- manual session save/load from the workflow panel, with saved filenames containing the selected dataset name, model, query mode, RAG mode, and save timestamp
-- experiment metadata fields for comparing configurations, including a success/failure result flag, with manual session saves copying the current viewport preview to a matching `_viewport.png` file only for succeeded experiments when available
+API keys can be entered in the app, or provided through environment variables. The app only checks the key for the currently selected provider.
 
-The generated code must define:
+Supported provider variables:
 
-```python
-def create_visualization(dataset_path: str, metadata: dict, user_request: dict):
-    """Return a vtkRenderer containing the complete visualization."""
+```text
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
+GEMINI_API_KEY
+GOOGLE_API_KEY
+BLABLADOR_API_KEY
+BLABLADOOR_API_KEY
 ```
 
-Generated prompts, retrieval snapshots, LLM responses, and code are stored under ignored `local/generated/` folders for reproducibility.
-Autosaved and manually saved GUI sessions are stored locally under ignored `local/sessions/`. API keys are not saved.
-
-In the LLM panel, choose a provider and enter the matching API key, or leave the key field empty when the provider-specific environment variable is already set. The app only checks the API key for the currently selected/resolved model provider. The model field remains editable, so any LiteLLM model string supported by your installed LiteLLM version can be used.
-
-For Blablador, choose the `Blablador` provider. The default model is `alias-code`, and the app uses Blablador's OpenAI-compatible endpoint at `https://api.blablador.fz-juelich.de/v1/` unless you enter a custom API base. To provide the token through PowerShell for the current terminal session:
+For the current PowerShell session:
 
 ```powershell
+$env:OPENAI_API_KEY = "your-openai-key"
+$env:ANTHROPIC_API_KEY = "your-anthropic-key"
+$env:GEMINI_API_KEY = "your-gemini-key"
 $env:BLABLADOR_API_KEY = "your-blablador-token"
 ```
 
@@ -139,25 +141,9 @@ To persist it for future PowerShell sessions:
 [Environment]::SetEnvironmentVariable("BLABLADOR_API_KEY", "your-blablador-token", "User")
 ```
 
-The current-session form only works for apps launched from that same PowerShell process after setting the variable. On Windows, the app also checks persistent User/Machine environment variables directly, so the persistent form is usually less fragile. The canonical spelling is `BLABLADOR_API_KEY`; `BLABLADOOR_API_KEY` is also accepted as a compatibility alias.
+Blablador uses the OpenAI-compatible endpoint `https://api.blablador.fz-juelich.de/v1/` by default. The canonical variable is `BLABLADOR_API_KEY`; `BLABLADOOR_API_KEY` is accepted as a compatibility alias.
 
-The token is the Helmholtz Codebase personal access token described in the Blablador API guide: https://sdlaml.pages.jsc.fz-juelich.de/ai/guides/blablador_api_access/
-
-## Evaluation
-
-Run the curated example queries:
-
-```powershell
-.\.venv\Scripts\python.exe -m rag.cli.evaluate
-```
-
-The default report path is:
-
-```text
-artifacts/reports/evaluation.json
-```
-
-## Experiment Analysis Dashboard
+## Experiment Dashboard and Editor
 
 Aggregate saved experiment sessions and build a local comparison dashboard:
 
@@ -174,7 +160,15 @@ artifacts/reports/experiment_dashboard/data/
 
 The generated data folder includes raw runs, one primary run per condition, RAG-vs-no-RAG pairs, explorative-vs-feature-aware pairs, grouped summaries, and a dataset feature rubric template. Duplicate conditions are resolved with the latest saved session by default; pass `--primary-strategy best` to select the highest-scoring run per condition instead.
 
-## Tests
+To edit documented experiment fields directly from the dashboard, launch the local editor server:
+
+```powershell
+.\.venv\Scripts\python.exe -m rag.cli.experiment_editor
+```
+
+Then open the printed localhost URL. Edit buttons appear in the dashboard only in this editor mode. Saving updates the selected session JSON under `local/sessions/`, creates a timestamped backup under `local/sessions/_backups/`, regenerates the dashboard data, and refreshes the page. The editor is limited to the experiment evaluation fields: result, attempts, recognized features, feature notes, colormap use, suggested seeding use, seeding score, and seeding notes.
+
+## Useful Development Commands
 
 Run the unit tests:
 
@@ -184,8 +178,14 @@ Run the unit tests:
 
 VTK-dependent tests are skipped when `vtk` is not installed.
 
-## Offline Note
+Run the data audit:
 
-Retrieval does not call an LLM. The production path uses local `sentence-transformers` with `BAAI/bge-small-en-v1.5`, stores normalized embeddings in `artifacts/indexes/default/embeddings.npy`, and uses exact dot-product search over the local matrix. For 122 records, exact matrix search is faster, simpler, and more accurate than an approximate ANN/vector database.
+```powershell
+.\.venv\Scripts\python.exe -m rag.cli.audit_data
+```
 
-Query-time model loading is forced to `local_files_only=True`, so once the model is cached, retrieval stays local/offline.
+Run the curated retrieval evaluation:
+
+```powershell
+.\.venv\Scripts\python.exe -m rag.cli.evaluate
+```

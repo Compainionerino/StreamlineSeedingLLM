@@ -6,7 +6,8 @@ const state = {
   models: new Set(),
   mode: "all",
   rag: "all",
-  search: ""
+  search: "",
+  editorEnabled: false
 };
 
 const multiSelects = [];
@@ -331,7 +332,8 @@ function fillSelect(select, values, allLabel) {
 }
 
 function renderMeta() {
-  els.reportMeta.textContent = `Generated ${new Date(data.generated_at).toLocaleString()} - primary: ${data.primary_strategy}`;
+  const editor = state.editorEnabled ? " - editor active" : "";
+  els.reportMeta.textContent = `Generated ${new Date(data.generated_at).toLocaleString()} - primary: ${data.primary_strategy}${editor}`;
 }
 
 function renderMetrics() {
@@ -440,9 +442,17 @@ function resultHtml(label, record) {
         ${scoreHtml("Attempts", fmt(record.attempts, 0))}
       </div>
       <p class="notes">${escapeHtml(firstUsefulNote(record))}</p>
-      <button class="run-link" type="button" data-record="${escapeAttr(record.id)}">Details</button>
+      <div class="run-actions">
+        <button class="run-link" type="button" data-action="detail" data-record="${escapeAttr(record.id)}">Details</button>
+        ${editorButtonHtml(record)}
+      </div>
     </div>
   `;
+}
+
+function editorButtonHtml(record, label = "Edit") {
+  if (!state.editorEnabled) return "";
+  return `<button class="edit-link" type="button" data-action="edit" data-record="${escapeAttr(record.id)}">${escapeHtml(label)}</button>`;
 }
 
 function thumbHtml(record) {
@@ -490,7 +500,7 @@ function miniHtml(record) {
 function renderRunsTable() {
   const filtered = data.records.filter(record => recordPasses(record));
   els.runsCount.textContent = `${filtered.length} runs`;
-  const header = ["Dataset", "Model", "Mode", "RAG category", "Success", "Features", "Seeding", "Attempts", "Image"];
+  const header = ["Dataset", "Model", "Mode", "RAG category", "Success", "Features", "Seeding", "Attempts", "Image", "Actions"];
   const rows = filtered.map(record => `
     <tr>
       <td>${escapeHtml(record.dataset)}</td>
@@ -502,6 +512,12 @@ function renderRunsTable() {
       <td>${fmt(record.seeding_score, 1)}</td>
       <td>${fmt(record.attempts, 0)}</td>
       <td>${record.has_image ? "yes" : "no"}</td>
+      <td>
+        <div class="run-actions">
+          <button class="run-link" type="button" data-action="detail" data-record="${escapeAttr(record.id)}">Details</button>
+          ${editorButtonHtml(record)}
+        </div>
+      </td>
     </tr>
   `).join("");
   els.runsTable.innerHTML = `<thead><tr>${header.map(value => `<th>${value}</th>`).join("")}</tr></thead><tbody>${rows}</tbody>`;
@@ -558,8 +574,148 @@ function openDetail(id) {
     <h3>Target Feature</h3>
     <p class="notes">${escapeHtml(record.target_feature || "-")}</p>
     <p>${record.session_url ? `<a href="${escapeAttr(record.session_url)}">Session JSON</a>` : ""} ${record.code_url ? `<a href="${escapeAttr(record.code_url)}">Generated code</a>` : ""}</p>
+    <div class="detail-actions">${editorButtonHtml(record, "Edit experiment")}</div>
   `;
-  els.dialog.showModal();
+  const editButton = els.detailContent.querySelector("[data-action='edit']");
+  if (editButton) {
+    editButton.addEventListener("click", () => openEditor(record.id));
+  }
+  showDialog();
+}
+
+function openEditor(id) {
+  const record = data.records.find(item => item.id === id) || data.primary_records.find(item => item.id === id);
+  if (!record || !state.editorEnabled) return;
+  els.detailContent.innerHTML = editFormHtml(record);
+  const form = els.detailContent.querySelector("#editForm");
+  const cancel = els.detailContent.querySelector("#cancelEdit");
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    saveExperimentEdits(record, form);
+  });
+  cancel.addEventListener("click", () => openDetail(record.id));
+  showDialog();
+}
+
+function editFormHtml(record) {
+  return `
+    <form class="edit-form" id="editForm">
+      <div>
+        <h2>${escapeHtml(record.dataset)} - ${escapeHtml(record.provider_model)}</h2>
+        <p class="report-meta">${escapeHtml(record.query_mode)} - ${escapeHtml(record.rag_strategy_label || (record.rag_enabled ? "RAG on" : "No RAG"))} - ${escapeHtml(record.session_file || record.session_rel_path)}</p>
+      </div>
+      <div class="form-grid">
+        <label>
+          <span>Result</span>
+          <select name="succeeded">
+            <option value="true" ${record.succeeded ? "selected" : ""}>Succeeded</option>
+            <option value="false" ${!record.succeeded ? "selected" : ""}>Failed</option>
+          </select>
+        </label>
+        <label>
+          <span>Attempts</span>
+          <input name="attempts" type="number" min="0" max="100000" step="1" value="${escapeAttr(fmt(record.attempts, 0))}">
+        </label>
+        <label>
+          <span>Features recognized</span>
+          <input name="features_recognized" type="number" min="0" max="100000" step="1" value="${escapeAttr(fmt(record.features_recognized, 0))}">
+        </label>
+        <label>
+          <span>Seeding score</span>
+          <input name="seeding_score" type="number" min="0" max="100" step="0.1" value="${escapeAttr(fmt(record.seeding_score, 1))}">
+        </label>
+        <label>
+          <span>Colormap used</span>
+          <select name="colormap_used">
+            <option value="true" ${record.colormap_used ? "selected" : ""}>Yes</option>
+            <option value="false" ${!record.colormap_used ? "selected" : ""}>No</option>
+          </select>
+        </label>
+        <label>
+          <span>Suggested seeding used</span>
+          <select name="suggested_seeding_used">
+            <option value="" ${record.suggested_seeding_used === null || record.suggested_seeding_used === undefined ? "selected" : ""}>Unclear</option>
+            <option value="true" ${record.suggested_seeding_used === true ? "selected" : ""}>Yes</option>
+            <option value="false" ${record.suggested_seeding_used === false ? "selected" : ""}>No</option>
+          </select>
+        </label>
+        <label class="wide">
+          <span>Feature notes</span>
+          <textarea name="feature_notes">${escapeHtml(record.feature_notes || "")}</textarea>
+        </label>
+        <label class="wide">
+          <span>Seeding notes</span>
+          <textarea name="seeding_notes">${escapeHtml(record.seeding_notes || "")}</textarea>
+        </label>
+      </div>
+      <div class="detail-actions">
+        <button class="primary-button" type="submit">Save JSON</button>
+        <button class="secondary-button" type="button" id="cancelEdit">Cancel</button>
+      </div>
+      <p class="edit-status" id="editStatus"></p>
+    </form>
+  `;
+}
+
+async function saveExperimentEdits(record, form) {
+  const button = form.querySelector("button[type='submit']");
+  const status = form.querySelector("#editStatus");
+  button.disabled = true;
+  status.classList.remove("error");
+  status.textContent = "Saving...";
+  const formData = new FormData(form);
+  const suggested = formData.get("suggested_seeding_used");
+  const experiment = {
+    succeeded: formData.get("succeeded") === "true",
+    attempts: formData.get("attempts"),
+    features_recognized: formData.get("features_recognized"),
+    seeding_score: formData.get("seeding_score"),
+    colormap_used: formData.get("colormap_used") === "true",
+    suggested_seeding_used: suggested === "" ? null : suggested === "true",
+    feature_notes: formData.get("feature_notes"),
+    seeding_notes: formData.get("seeding_notes")
+  };
+
+  try {
+    const response = await fetch("/api/experiment", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        session_rel_path: record.session_rel_path,
+        experiment
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "The JSON could not be saved.");
+    }
+    status.textContent = "Saved. Refreshing...";
+    window.setTimeout(() => window.location.reload(), 350);
+  } catch (error) {
+    status.textContent = error.message || String(error);
+    status.classList.add("error");
+    button.disabled = false;
+  }
+}
+
+function showDialog() {
+  if (!els.dialog.open) {
+    els.dialog.showModal();
+  }
+}
+
+async function detectEditor() {
+  if (!["http:", "https:"].includes(window.location.protocol)) return;
+  try {
+    const response = await fetch("/api/editor/status", {cache: "no-store"});
+    if (!response.ok) return;
+    const payload = await response.json();
+    state.editorEnabled = Boolean(payload.editor_enabled);
+    renderMeta();
+    renderActive();
+  } catch (error) {
+    state.editorEnabled = false;
+  }
 }
 
 function groupBy(items, fn) {
@@ -595,10 +751,16 @@ function renderActive() {
   renderMatrix();
   renderRunsTable();
   renderSummary();
-  document.querySelectorAll(".run-link, .thumb, .mini").forEach(button => {
+  document.querySelectorAll("[data-record]").forEach(button => {
     button.addEventListener("click", event => {
       const id = event.currentTarget.getAttribute("data-record");
-      if (id) openDetail(id);
+      const action = event.currentTarget.getAttribute("data-action") || "detail";
+      if (!id) return;
+      if (action === "edit") {
+        openEditor(id);
+      } else {
+        openDetail(id);
+      }
     });
   });
 }
@@ -634,3 +796,4 @@ populateFilters();
 renderMeta();
 renderActive();
 wireEvents();
+detectEditor();

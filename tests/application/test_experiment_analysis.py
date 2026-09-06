@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from rag.experiment_analysis import build_experiment_report
+from rag.experiment_editor import ExperimentEditError, update_session_experiment
 
 
 class ExperimentAnalysisTests(unittest.TestCase):
@@ -44,6 +45,16 @@ class ExperimentAnalysisTests(unittest.TestCase):
                 rag_enabled=True,
                 features=9,
                 seeding=9,
+            )
+            backup_dir = sessions / "_backups" / "datasetA"
+            backup_dir.mkdir(parents=True)
+            self._write_session(
+                backup_dir / "datasetA_alias-code_feature_aware_rag_backup.json",
+                provider="blablador",
+                model_name="alias-code",
+                rag_enabled=True,
+                features=99,
+                seeding=99,
             )
 
             report = build_experiment_report(
@@ -109,6 +120,76 @@ class ExperimentAnalysisTests(unittest.TestCase):
             self.assertEqual(report["totals"]["primary_conditions"], 1)
             self.assertEqual(report["totals"]["duplicate_conditions"], 1)
             self.assertEqual(report["primary_records"][0]["features_recognized"], 3)
+
+    def test_update_session_experiment_writes_allowed_fields_and_backup(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            sessions = root / "local" / "sessions"
+            dataset_dir = sessions / "datasetA"
+            session_path = dataset_dir / "datasetA_alias-code_explorative_rag_20260819_090000.json"
+            dataset_dir.mkdir(parents=True)
+            self._write_session(
+                session_path,
+                provider="blablador",
+                model_name="alias-code",
+                rag_enabled=True,
+                succeeded=True,
+                features=1,
+                seeding=2,
+            )
+
+            result = update_session_experiment(
+                "local/sessions/datasetA/datasetA_alias-code_explorative_rag_20260819_090000.json",
+                {
+                    "succeeded": False,
+                    "attempts": 4,
+                    "features_recognized": 3,
+                    "feature_notes": "corrected features",
+                    "colormap_used": False,
+                    "suggested_seeding_used": None,
+                    "seeding_score": 6.5,
+                    "seeding_notes": "corrected seeding",
+                },
+                sessions,
+                repo_root=root,
+            )
+
+            payload = json.loads(session_path.read_text(encoding="utf-8"))
+            experiment = payload["experiment"]
+            self.assertFalse(experiment["succeeded"])
+            self.assertEqual(experiment["attempts"], 4)
+            self.assertEqual(experiment["features_recognized"], 3)
+            self.assertEqual(experiment["feature_notes"], "corrected features")
+            self.assertFalse(experiment["colormap_used"])
+            self.assertIsNone(experiment["suggested_seeding_used"])
+            self.assertEqual(experiment["seeding_score"], 6.5)
+            self.assertEqual(experiment["seeding_notes"], "corrected seeding")
+            self.assertEqual(result["updated_fields"], sorted(result["updated_fields"]))
+            self.assertTrue((root / result["backup_rel_path"]).exists())
+
+    def test_update_session_experiment_rejects_non_experiment_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            sessions = root / "local" / "sessions"
+            dataset_dir = sessions / "datasetA"
+            session_path = dataset_dir / "datasetA_alias-code_explorative_rag_20260819_090000.json"
+            dataset_dir.mkdir(parents=True)
+            self._write_session(
+                session_path,
+                provider="blablador",
+                model_name="alias-code",
+                rag_enabled=True,
+                features=1,
+                seeding=2,
+            )
+
+            with self.assertRaises(ExperimentEditError):
+                update_session_experiment(
+                    session_path,
+                    {"model": "other-model"},
+                    sessions,
+                    repo_root=root,
+                )
 
     def _write_session(
         self,
