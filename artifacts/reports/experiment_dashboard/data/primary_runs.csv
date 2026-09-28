@@ -1,7 +1,8 @@
 ﻿id,dataset,provider,model,query_mode,rag_enabled,rag_strategy_category,rag_strategy_label,succeeded,first_try_success,features_recognized,observed_feature_coverage,seeding_score,attempts,colormap_used,suggested_seeding_used,has_image,duplicate_count,is_primary,saved_at,session_rel_path,image_rel_path,code_rel_path,feature_notes,seeding_notes
-boussinesq2d__boussinesq2d_anthropic_claude-opus-5_explorative_no_rag_20260814_131152,boussinesq2d,anthropic,anthropic/claude-opus-5,explorative,false,no_rag,No RAG,true,true,0,0.0,0.0,1,true,false,true,1,true,2026-08-14T11:11:57Z,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_no_rag_20260814_131152.json,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_no_rag_20260814_131152_viewport.png,local/generated/20260814_131011_00c26465/generated_visualization.py,"Time Slices way to spread out, no view of any feature possible",
-boussinesq2d__boussinesq2d_anthropic_claude-opus-5_explorative_rag_20260814_130643,boussinesq2d,anthropic,anthropic/claude-opus-5,explorative,true,strategy_ignored,RAG: strategy ignored,true,true,3,1.0,9.0,1,true,false,true,1,true,2026-08-14T11:06:53Z,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_rag_20260814_130643.json,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_rag_20260814_130643_viewport.png,local/generated/20260814_130525_55d40e66/generated_visualization.py,All features well percieved,density-controlled importance seeding (dsep filter)
-boussinesq2d__boussinesq2d_anthropic_claude-opus-5_feature_aware_no_rag_20260814_144659,boussinesq2d,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,3,1.0,10.0,1,true,true,true,1,true,2026-08-14T12:47:03Z,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_feature_aware_no_rag_20260814_144659.json,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_feature_aware_no_rag_20260814_144659_viewport.png,local/generated/20260814_144341_ef1dccc7/generated_visualization.py,"Obstruction Visible
+boussinesq2d__boussinesq2d_anthropic_claude-opus-5_explorative_no_rag_20260814_131152,boussinesq2d,anthropic,anthropic/claude-opus-5,explorative,false,no_rag,No RAG,true,true,0,0.0,0.0,1,false,false,true,1,true,2026-08-14T11:11:57Z,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_no_rag_20260814_131152.json,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_no_rag_20260814_131152_viewport.png,local/generated/20260814_131011_00c26465/generated_visualization.py,"Time Slices way to spread out, no view of any feature possible
+Streamlines are not being rendered",
+boussinesq2d__boussinesq2d_anthropic_claude-opus-5_explorative_rag_20260814_130643,boussinesq2d,anthropic,anthropic/claude-opus-5,explorative,true,strategy_used,RAG: strategy used,true,true,3,1.0,9.0,1,true,true,true,1,true,2026-08-14T11:06:53Z,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_rag_20260814_130643.json,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_explorative_rag_20260814_130643_viewport.png,local/generated/20260814_130525_55d40e66/generated_visualization.py,All features well percieved,density-controlled importance seeding (dsep filter)
+boussinesq2d__boussinesq2d_anthropic_claude-opus-5_feature_aware_no_rag_20260814_144659,boussinesq2d,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,3,1.0,10.0,1,true,false,true,1,true,2026-08-14T12:47:03Z,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_feature_aware_no_rag_20260814_144659.json,local/sessions/boussinesq2d/boussinesq2d_anthropic_claude-opus-5_feature_aware_no_rag_20260814_144659_viewport.png,local/generated/20260814_144341_ef1dccc7/generated_visualization.py,"Obstruction Visible
 Regular flow at start, irregular at end
 Several time slices 
 Correct vectors from unit vectors","Feature aware seeding: several horizontal rakes spanning the channel,
@@ -41,7 +42,7 @@ boussinesq2d__boussinesq2d_openai_gpt-5.6-terra_explorative_rag_20260814_131752,
 No flow around obstruction
 Unit Vector Transformation Successful
 Colormap was used",Stratified uniform rake seeding: 20 evenly distributed seeds per displayed time slice.
-boussinesq2d__boussinesq2d_openai_gpt-5.6-terra_feature_aware_no_rag_20260814_151351,boussinesq2d,openai,openai/gpt-5.6-terra,feature aware,false,no_rag,No RAG,true,true,3,1.0,10.0,1,false,false,true,1,true,2026-08-14T13:13:55Z,local/sessions/boussinesq2d/boussinesq2d_openai_gpt-5.6-terra_feature_aware_no_rag_20260814_151351.json,local/sessions/boussinesq2d/boussinesq2d_openai_gpt-5.6-terra_feature_aware_no_rag_20260814_151351_viewport.png,local/generated/20260814_151134_964dd453/generated_visualization.py,"Obstruction Visible, showed by low speed sections
+boussinesq2d__boussinesq2d_openai_gpt-5.6-terra_feature_aware_no_rag_20260814_151351,boussinesq2d,openai,openai/gpt-5.6-terra,feature aware,false,no_rag,No RAG,true,true,3,1.0,10.0,1,true,false,true,1,true,2026-08-14T13:13:55Z,local/sessions/boussinesq2d/boussinesq2d_openai_gpt-5.6-terra_feature_aware_no_rag_20260814_151351.json,local/sessions/boussinesq2d/boussinesq2d_openai_gpt-5.6-terra_feature_aware_no_rag_20260814_151351_viewport.png,local/generated/20260814_151134_964dd453/generated_visualization.py,"Obstruction Visible, showed by low speed sections
 Regular flow at start, irregular at end
 Several time slices
 Flow differences between time slices 
@@ -102,7 +103,7 @@ Different magnitude of vectors in low-x region vs high-x region visualized via c
     # Use a reasonable number of points to show flow without cluttering
     # Based on dataset size and 2D nature, use ~1000 seeds spread across the domain"
 JetVelocity__JetVelocity_alias-code_explorative_rag_20260815_133901,JetVelocity,blablador,alias-code,explorative,true,unclear_failed,RAG: unclear / failed,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-15T11:39:05Z,local/sessions/JetVelocity/JetVelocity_alias-code_explorative_rag_20260815_133901.json,,local/generated/20260815_133702_6c70f281/generated_visualization.py,,
-JetVelocity__JetVelocity_alias-code_feature_aware_no_rag_20260815_144334,JetVelocity,blablador,alias-code,feature aware,false,no_rag,No RAG,false,false,4,1.0,8.0,2,true,false,false,1,true,2026-08-15T12:43:37Z,local/sessions/JetVelocity/JetVelocity_alias-code_feature_aware_no_rag_20260815_144334.json,,local/generated/20260815_144248_98ef64c1/generated_visualization.py,"Turbulent vortical flow in low-x region
+JetVelocity__JetVelocity_alias-code_feature_aware_no_rag_20260815_144334,JetVelocity,blablador,alias-code,feature aware,false,no_rag,No RAG,true,false,4,1.0,8.0,2,true,false,true,1,true,2026-09-27T12:25:45Z,local/sessions/JetVelocity/JetVelocity_alias-code_feature_aware_no_rag_20260815_144334.json,local/sessions/JetVelocity/JetVelocity_alias-code_feature_aware_no_rag_20260815_144334_viewport.png,local/generated/20260927_142458_6d48d23c/generated_visualization.py,"Turbulent vortical flow in low-x region
 Less turbulent, partially laminar flow in the high-x region
 Clear separation between both flow regions
 Different magnitude of vectors in low-x region vs high-x region visualized via colormap","# Create a grid of seed points to cover the domain well
@@ -166,23 +167,11 @@ Usage of colormap differentiates turbulent from laminar regions","* A vertical i
   * A small ring of seeds around the detected obstacle -> shows the
     separation right at the body."
 KarmanBalken2D__KarmanBalken2D_anthropic_claude-opus-5_explorative_rag_20260815_151050,KarmanBalken2D,anthropic,anthropic/claude-opus-5,explorative,true,unclear_failed,RAG: unclear / failed,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-15T13:10:54Z,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_explorative_rag_20260815_151050.json,,local/generated/20260815_150949_a6044185/generated_visualization.py,,
-KarmanBalken2D__KarmanBalken2D_anthropic_claude-opus-5_feature_aware_no_rag_20260815_160509,KarmanBalken2D,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,5,1.0,10.0,1,true,true,true,1,true,2026-08-15T14:05:12Z,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_feature_aware_no_rag_20260815_160509.json,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_feature_aware_no_rag_20260815_160509_viewport.png,local/generated/20260815_160427_0dba1029/generated_visualization.py,"Laminar Flow at low-x region
+KarmanBalken2D__KarmanBalken2D_anthropic_claude-opus-5_feature_aware_no_rag_20260815_160509,KarmanBalken2D,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,5,1.0,10.0,1,true,false,true,1,true,2026-08-15T14:05:12Z,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_feature_aware_no_rag_20260815_160509.json,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_feature_aware_no_rag_20260815_160509_viewport.png,local/generated/20260815_160427_0dba1029/generated_visualization.py,"Laminar Flow at low-x region
 Obstruction visualized
 Turbulent Flow after obstruction visible
 usage of colormap differentiates turbulent from laminar regions
-actually draws the obstruction","Seeding strategy (derived from the retrieved literature records):
-  * Record 1 (""PDM-Based Graph Cut Clustering ...""): uniform grid seeding -
-    the 2D domain is partitioned into equal rectangular regions and the CENTER
-    of each region is used as a seed.  This guarantees complete coverage of the
-    field (laminar inflow region, free-stream regions, boundary layers).
-  * Record 2 (dual-guided / importance driven seeding) and Record 3
-    (feature emphasis by locally reducing d_sep): approximated here by a
-    FEATURE-AWARE DENSIFICATION - the seed spacing is locally reduced inside the
- * inlet rake  -> shows the undisturbed laminar inflow
-  * obstacle-hugging shear-layer seeds -> shows separation at the obstruction
-  * near-wake and downstream rakes -> reveal the periodic vortex street
-Streamlines are coloured by vorticity magnitude so that laminar (low vorticity)
-and turbulent / vortical (high vorticity) regions are clearly separated."
+actually draws the obstruction",
 KarmanBalken2D__KarmanBalken2D_anthropic_claude-opus-5_feature_aware_rag_20260815_160115,KarmanBalken2D,anthropic,anthropic/claude-opus-5,feature aware,true,strategy_used,RAG: strategy used,true,false,5,1.0,10.0,2,true,true,true,1,true,2026-08-15T14:01:18Z,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_feature_aware_rag_20260815_160115.json,local/sessions/KarmanBalken2D/KarmanBalken2D_anthropic_claude-opus-5_feature_aware_rag_20260815_160115_viewport.png,local/generated/20260815_160018_a6b68a65/generated_visualization.py,"Laminar Flow at low-x region
 Obstruction visualized
 Turbulent Flow after obstruction visible
@@ -200,7 +189,7 @@ actually draws the obstruction","Seeding strategy (derived from the retrieved li
     The full iterative thermal/energy optimization of those papers is not
     reproduced (too specialized); the practical VTK approximation is a
     two-resolution seed set + speed based seed rejection."
-KarmanBalken2D__KarmanBalken2D_alias-code_explorative_no_rag_20260815_152903,KarmanBalken2D,blablador,alias-code,explorative,false,no_rag,No RAG,false,false,4,0.8,7.0,2,true,false,false,1,true,2026-08-15T13:29:06Z,local/sessions/KarmanBalken2D/KarmanBalken2D_alias-code_explorative_no_rag_20260815_152903.json,,local/generated/20260815_152819_6aa44646/generated_visualization.py,"Laminar Flow at low-x region
+KarmanBalken2D__KarmanBalken2D_alias-code_explorative_no_rag_20260815_152903,KarmanBalken2D,blablador,alias-code,explorative,false,no_rag,No RAG,true,false,4,0.8,7.0,2,true,false,true,1,true,2026-09-27T12:27:51Z,local/sessions/KarmanBalken2D/KarmanBalken2D_alias-code_explorative_no_rag_20260815_152903.json,local/sessions/KarmanBalken2D/KarmanBalken2D_alias-code_explorative_no_rag_20260815_152903_viewport.png,local/generated/20260927_142712_0bc74ab9/generated_visualization.py,"Laminar Flow at low-x region
 Obstruction visualized
 Turbulent Flow after obstruction visible
 usage of colormap differentiates turbulent from laminar regions","# Determine seed placement: horizontal line upstream of the obstruction
@@ -223,7 +212,7 @@ usage of colormap differentiates turbulent from laminar regions
 Too few streamlines","Seeding Strategy: Hybrid domain-partitioned grid and inflow line rake (Retrieved Records 1 & 3)
     # Combines an upstream vertical rake at the inlet to capture main inflow paths
     # with a partitioned 2D regular grid to resolve stagnation, wake, and vortex shedding around the obstacle."
-KarmanBalken2D__KarmanBalken2D_gemini_gemini-3.7-flash_feature_aware_no_rag_20260815_163323,KarmanBalken2D,gemini,gemini/gemini-3.7-flash,feature aware,false,no_rag,No RAG,true,false,4,0.8,8.0,2,true,true,true,1,true,2026-08-15T14:33:28Z,local/sessions/KarmanBalken2D/KarmanBalken2D_gemini_gemini-3.7-flash_feature_aware_no_rag_20260815_163323.json,local/sessions/KarmanBalken2D/KarmanBalken2D_gemini_gemini-3.7-flash_feature_aware_no_rag_20260815_163323_viewport.png,local/generated/20260815_163243_268f2a95/generated_visualization.py,"Laminar Flow at low-x region
+KarmanBalken2D__KarmanBalken2D_gemini_gemini-3.7-flash_feature_aware_no_rag_20260815_163323,KarmanBalken2D,gemini,gemini/gemini-3.7-flash,feature aware,false,no_rag,No RAG,true,false,4,0.8,8.0,2,true,false,true,1,true,2026-08-15T14:33:28Z,local/sessions/KarmanBalken2D/KarmanBalken2D_gemini_gemini-3.7-flash_feature_aware_no_rag_20260815_163323.json,local/sessions/KarmanBalken2D/KarmanBalken2D_gemini_gemini-3.7-flash_feature_aware_no_rag_20260815_163323_viewport.png,local/generated/20260815_163243_268f2a95/generated_visualization.py,"Laminar Flow at low-x region
 Laminar Flow at regions without distruption
 Turbulent Flow after obstruction visible
 usage of colormap differentiates turbulent from laminar regions",# Seeding strategy: Multi-rake domain seeding (Inlet laminar rake combined with downstream wake rakes)
@@ -285,7 +274,7 @@ good coverage of whole flow field","Dense *pseudo-random volumetric seeding* int
     * Randomness is produced by a small self-contained deterministic linear
       congruential generator (no external random module), so the result is
       fully reproducible."
-kitchen__kitchen_anthropic_claude-opus-5_feature_aware_no_rag_20260815_171606,kitchen,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,3,1.0,10.0,1,true,true,true,1,true,2026-08-15T15:16:09Z,local/sessions/kitchen/kitchen_anthropic_claude-opus-5_feature_aware_no_rag_20260815_171606.json,local/sessions/kitchen/kitchen_anthropic_claude-opus-5_feature_aware_no_rag_20260815_171606_viewport.png,local/generated/20260815_171524_86ee1085/generated_visualization.py,"Flow towards vent
+kitchen__kitchen_anthropic_claude-opus-5_feature_aware_no_rag_20260815_171606,kitchen,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,3,1.0,10.0,1,true,false,true,1,true,2026-08-15T15:16:09Z,local/sessions/kitchen/kitchen_anthropic_claude-opus-5_feature_aware_no_rag_20260815_171606.json,local/sessions/kitchen/kitchen_anthropic_claude-opus-5_feature_aware_no_rag_20260815_171606_viewport.png,local/generated/20260815_171524_86ee1085/generated_visualization.py,"Flow towards vent
 lower magnitude flow at bottom
 good coverage of whole flow field","""""""Feature-aware: locate the point with the largest velocity magnitude."""""""
 kitchen__kitchen_anthropic_claude-opus-5_feature_aware_rag_20260815_171331,kitchen,anthropic,anthropic/claude-opus-5,feature aware,true,strategy_used,RAG: strategy used,true,true,3,1.0,10.0,1,true,true,true,1,true,2026-08-15T15:13:34Z,local/sessions/kitchen/kitchen_anthropic_claude-opus-5_feature_aware_rag_20260815_171331.json,local/sessions/kitchen/kitchen_anthropic_claude-opus-5_feature_aware_rag_20260815_171331_viewport.png,local/generated/20260815_171238_f3bb8662/generated_visualization.py,"Flow towards vent
@@ -316,7 +305,7 @@ kitchen__kitchen_alias-code_feature_aware_rag_20260815_173132,kitchen,blablador,
 Colormap didn't work","# SEEDING STRATEGY: DIOM-inspired seeding (Record 2) - approximate implementation
     # Using a uniform grid of seeds based on dataset bounds and recommended density
     # to balance flow representation and clutter avoidance (per user constraints)"
-kitchen__kitchen_gemini_gemini-3.7-flash_explorative_no_rag_20260815_170504,kitchen,gemini,gemini/gemini-3.7-flash,explorative,false,no_rag,No RAG,true,true,3,1.0,8.0,1,true,true,true,1,true,2026-08-15T15:05:07Z,local/sessions/kitchen/kitchen_gemini_gemini-3.7-flash_explorative_no_rag_20260815_170504.json,local/sessions/kitchen/kitchen_gemini_gemini-3.7-flash_explorative_no_rag_20260815_170504_viewport.png,local/generated/20260815_170418_681c0986/generated_visualization.py,"Flow towards vent
+kitchen__kitchen_gemini_gemini-3.7-flash_explorative_no_rag_20260815_170504,kitchen,gemini,gemini/gemini-3.7-flash,explorative,false,no_rag,No RAG,true,true,3,1.0,8.0,1,true,false,true,1,true,2026-08-15T15:05:07Z,local/sessions/kitchen/kitchen_gemini_gemini-3.7-flash_explorative_no_rag_20260815_170504.json,local/sessions/kitchen/kitchen_gemini_gemini-3.7-flash_explorative_no_rag_20260815_170504_viewport.png,local/generated/20260815_170418_681c0986/generated_visualization.py,"Flow towards vent
 lower magnitude flow at bottom
 good coverage of whole flow field
 
@@ -366,7 +355,7 @@ Color the streamlines with a fitting colormap","Seeding strategy (see comments a
   separation distance dsep -> quasi evenly spaced (Poisson-disk / dart-throwing)
   seeding directly on the visible model surface. dsep is auto-tuned so the number of
   streamlines stays in a readable, non-cluttered range."
-markPosVector__markPosVector_anthropic_claude-opus-5_feature_aware_no_rag_20260817_100017,markPosVector,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,false,3,0.75,8.0,3,true,true,true,1,true,2026-08-17T08:00:20Z,local/sessions/markPosVector/markPosVector_anthropic_claude-opus-5_feature_aware_no_rag_20260817_100017.json,local/sessions/markPosVector/markPosVector_anthropic_claude-opus-5_feature_aware_no_rag_20260817_100017_viewport.png,local/generated/20260817_095829_d64cc8a8/generated_visualization.py,"- Flow source at bottom right of model
+markPosVector__markPosVector_anthropic_claude-opus-5_feature_aware_no_rag_20260817_100017,markPosVector,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,false,3,0.75,8.0,3,true,false,true,1,true,2026-08-17T08:00:20Z,local/sessions/markPosVector/markPosVector_anthropic_claude-opus-5_feature_aware_no_rag_20260817_100017.json,local/sessions/markPosVector/markPosVector_anthropic_claude-opus-5_feature_aware_no_rag_20260817_100017_viewport.png,local/generated/20260817_095829_d64cc8a8/generated_visualization.py,"- Flow source at bottom right of model
 - Surface flow of the whole model is shown insufficiently, streamlines too short
 - Show the solid grid correctly
 - Color the streamlines with a fitting colormap","""""Seed points spread over the model surface (flow originates from the surface)."""""""
@@ -383,7 +372,8 @@ markPosVector__markPosVector_anthropic_claude-opus-5_feature_aware_rag_20260817_
     view independent and therefore stable for interactive rotation in the host viewport.
   * Record 2 - cube/cell based seed candidates with a *non-zero velocity* eligibility test
     is reused as the candidate filter (points with negligible velocity are never seeded)."
-markPosVector__markPosVector_alias-code_explorative_no_rag_20260817_094207,markPosVector,blablador,alias-code,explorative,false,no_rag,No RAG,false,false,1,0.25,0.0,3,false,false,false,2,true,2026-08-17T07:42:10Z,local/sessions/markPosVector/markPosVector_alias-code_explorative_no_rag_20260817_094207.json,,local/generated/20260817_094135_099dce36/generated_visualization.py,Mesh was displayed correctly,No steamlines drawn
+markPosVector__markPosVector_alias-code_explorative_no_rag_20260817_094207,markPosVector,blablador,alias-code,explorative,false,no_rag,No RAG,true,false,1,0.25,0.0,3,false,false,true,1,true,2026-09-27T12:30:53Z,local/sessions/markPosVector/markPosVector_alias-code_explorative_no_rag_20260817_094207.json,local/sessions/markPosVector/markPosVector_alias-code_explorative_no_rag_20260817_094207_viewport.png,local/generated/20260927_142958_c12e31e5/generated_visualization.py,Mesh was displayed correctly,No steamlines drawn
+markPosVector__markPosVector_alias-code_explorative_rag_20260817_094026,markPosVector,blablador,alias-code,explorative,true,unclear_failed,RAG: unclear / failed,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-09-27T10:44:54Z,local/sessions/markPosVector/markPosVector_alias-code_explorative_rag_20260817_094026.json,,local/generated/20260817_093949_da322e0e/generated_visualization.py,,
 markPosVector__markPosVector_alias-code_feature_aware_no_rag_20260817_104127,markPosVector,blablador,alias-code,feature aware,false,no_rag,No RAG,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-17T08:41:32Z,local/sessions/markPosVector/markPosVector_alias-code_feature_aware_no_rag_20260817_104127.json,,local/generated/20260817_104106_5ade6ba9/generated_visualization.py,,
 markPosVector__markPosVector_alias-code_feature_aware_rag_20260817_104010,markPosVector,blablador,alias-code,feature aware,true,strategy_ignored,RAG: strategy ignored,true,false,1,0.25,2.0,2,false,false,true,1,true,2026-08-17T08:40:13Z,local/sessions/markPosVector/markPosVector_alias-code_feature_aware_rag_20260817_104010.json,local/sessions/markPosVector/markPosVector_alias-code_feature_aware_rag_20260817_104010_viewport.png,local/generated/20260817_103840_2ebb234d/generated_visualization.py,- Show the solid grid correctly,"# Seeding strategy: Image-based evenly-spaced seeding approximation
     # Since VTK doesn't have built-in image-based seeding, we use a practical approximation:
@@ -410,7 +400,7 @@ markPosVector__markPosVector_gemini_gemini-3.7-flash_feature_aware_rag_20260817_
 - Surface flow of the whole model, moderately visible because of short streamlines
 - Show the solid grid correctly","# Seeding strategy: Feature-aware surface point sampling with source-region reinforcement
     # Uniformly sample points across the surface mesh to capture full surface flow coverage"
-markPosVector__markPosVector_openai_gpt-5.6-terra_explorative_no_rag_20260817_093047,markPosVector,openai,openai/gpt-5.6-terra,explorative,false,no_rag,No RAG,true,true,2,0.5,4.0,1,true,true,true,1,true,2026-08-17T07:30:48Z,local/sessions/markPosVector/markPosVector_openai_gpt-5.6-terra_explorative_no_rag_20260817_093047.json,local/sessions/markPosVector/markPosVector_openai_gpt-5.6-terra_explorative_no_rag_20260817_093047_viewport.png,local/generated/20260817_092738_50536c2b/generated_visualization.py,"The flow shown in this example is insufficient, only the top of the model has visible streamlines
+markPosVector__markPosVector_openai_gpt-5.6-terra_explorative_no_rag_20260817_093047,markPosVector,openai,openai/gpt-5.6-terra,explorative,false,no_rag,No RAG,true,true,2,0.5,4.0,1,true,false,true,1,true,2026-08-17T07:30:48Z,local/sessions/markPosVector/markPosVector_openai_gpt-5.6-terra_explorative_no_rag_20260817_093047.json,local/sessions/markPosVector/markPosVector_openai_gpt-5.6-terra_explorative_no_rag_20260817_093047_viewport.png,local/generated/20260817_092738_50536c2b/generated_visualization.py,"The flow shown in this example is insufficient, only the top of the model has visible streamlines
 Show the solid grid correctly
 Color the streamlines with a fitting colormap",No comments about seeding in code
 markPosVector__markPosVector_openai_gpt-5.6-terra_explorative_rag_20260817_092238,markPosVector,openai,openai/gpt-5.6-terra,explorative,true,strategy_used,RAG: strategy used,true,false,4,1.0,10.0,2,true,true,true,1,true,2026-08-17T07:22:42Z,local/sessions/markPosVector/markPosVector_openai_gpt-5.6-terra_explorative_rag_20260817_092238.json,local/sessions/markPosVector/markPosVector_openai_gpt-5.6-terra_explorative_rag_20260817_092238_viewport.png,local/generated/20260817_092048_27990ab6/generated_visualization.py,"Flow source at bottom right of model
@@ -425,7 +415,7 @@ markPosVector__markPosVector_openai_gpt-5.6-terra_feature_aware_rag_20260817_101
 - Surface flow of the whole model, not recognizable because of insufficient streamline length
 - Show the solid grid correctly
 - Color the streamlines with a fitting colormap",# Surface-stratified evenly spaced seeding with a denser lower-right source patch
-streamTest1__streamTest1_anthropic_claude-opus-5_explorative_no_rag_20260817_111623,streamTest1,anthropic,anthropic/claude-opus-5,explorative,false,no_rag,No RAG,true,true,4,1.0,9.0,1,true,true,true,1,true,2026-08-17T09:16:26Z,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_explorative_no_rag_20260817_111623.json,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_explorative_no_rag_20260817_111623_viewport.png,local/generated/20260817_111448_cd90996d/generated_visualization.py,"- General flow overview of Dataset
+streamTest1__streamTest1_anthropic_claude-opus-5_explorative_no_rag_20260817_111623,streamTest1,anthropic,anthropic/claude-opus-5,explorative,false,no_rag,No RAG,true,true,4,1.0,9.0,1,true,false,true,1,true,2026-08-17T09:16:26Z,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_explorative_no_rag_20260817_111623.json,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_explorative_no_rag_20260817_111623_viewport.png,local/generated/20260817_111448_cd90996d/generated_visualization.py,"- General flow overview of Dataset
 - Vortex diagonal to the domain
 - Flow velocity differentiation, velocity magnitude decreases the farther the streamline travels towards the bounds
 - Correct use of colormap","""""""Volumetric lattice seeding inside the dataset bounds (uniform 3D coverage)."""""""
@@ -444,7 +434,7 @@ Practical VTK approximation: entropy/occlusion ranking and view-dependent
 selection of Record 1 are replaced by a magnitude filter + Poisson-disk-like
 minimum-separation filter, which yields a comparable, well-spread, low-clutter
 set of streamlines without needing a viewpoint or isosurface opacity."
-streamTest1__streamTest1_anthropic_claude-opus-5_feature_aware_no_rag_20260817_124314,streamTest1,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,2,0.5,6.0,1,true,true,true,1,true,2026-08-17T10:43:24Z,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_feature_aware_no_rag_20260817_124314.json,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_feature_aware_no_rag_20260817_124314_viewport.png,local/generated/20260817_124229_19488e0e/generated_visualization.py,"General flow overview of Dataset
+streamTest1__streamTest1_anthropic_claude-opus-5_feature_aware_no_rag_20260817_124314,streamTest1,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,2,0.5,6.0,1,true,false,true,1,true,2026-08-17T10:43:24Z,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_feature_aware_no_rag_20260817_124314.json,local/sessions/streamTest1/streamTest1_anthropic_claude-opus-5_feature_aware_no_rag_20260817_124314_viewport.png,local/generated/20260817_124229_19488e0e/generated_visualization.py,"General flow overview of Dataset
 Vortex diagonal to the Domain","""""""Feature-aware seeding for a central vortex.
     Combines a structured spherical shell of seeds around the domain centre
     (sampling both the planar diagonal divergence and the orthogonal
@@ -476,7 +466,7 @@ clearly visible (feature-aware complement to the importance-guided seeds).
 -> Too few streamlines to actually visualize the features that were expected perfectly"
 streamTest1__streamTest1_alias-code_explorative_no_rag_20260817_123256,streamTest1,blablador,alias-code,explorative,false,no_rag,No RAG,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-17T10:32:59Z,local/sessions/streamTest1/streamTest1_alias-code_explorative_no_rag_20260817_123256.json,,local/generated/20260817_123248_b2822991/generated_visualization.py,,
 streamTest1__streamTest1_alias-code_explorative_rag_20260817_123159,streamTest1,blablador,alias-code,explorative,true,unclear_failed,RAG: unclear / failed,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-17T10:32:01Z,local/sessions/streamTest1/streamTest1_alias-code_explorative_rag_20260817_123159.json,,local/generated/20260817_123140_b21b439f/generated_visualization.py,,
-streamTest1__streamTest1_alias-code_feature_aware_no_rag_20260817_131013,streamTest1,blablador,alias-code,feature aware,false,no_rag,No RAG,false,false,0,0.0,0.0,0,false,false,false,1,true,2026-08-17T11:10:17Z,local/sessions/streamTest1/streamTest1_alias-code_feature_aware_no_rag_20260817_131013.json,,local/generated/20260817_130954_0ce227d2/generated_visualization.py,,
+streamTest1__streamTest1_alias-code_feature_aware_no_rag_20260817_131013,streamTest1,blablador,alias-code,feature aware,false,no_rag,No RAG,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-17T11:10:17Z,local/sessions/streamTest1/streamTest1_alias-code_feature_aware_no_rag_20260817_131013.json,,local/generated/20260817_130954_0ce227d2/generated_visualization.py,,
 streamTest1__streamTest1_alias-code_feature_aware_rag_20260817_131146,streamTest1,blablador,alias-code,feature aware,true,strategy_used,RAG: strategy used,true,false,2,0.5,6.0,3,false,true,true,1,true,2026-08-17T11:11:50Z,local/sessions/streamTest1/streamTest1_alias-code_feature_aware_rag_20260817_131146.json,local/sessions/streamTest1/streamTest1_alias-code_feature_aware_rag_20260817_131146_viewport.png,local/generated/20260817_131041_8b66f2d3/generated_visualization.py,"General flow overview of Dataset
 Vortex diagonal to the Domain","# Feature-aware seeding: Use dual-streamline seeding approximation
     # We approximate the dual seeding strategy by creating a grid of seeds
@@ -609,22 +599,39 @@ streamTest2__streamTest2_anthropic_claude-opus-5_feature_aware_rag_20260818_1427
     minimum-distance (Poisson-like) filter so that the turbulent region is
     resolved without cluttering the view."
 streamTest2__streamTest2_alias-code_explorative_no_rag_20260818_134856,streamTest2,blablador,alias-code,explorative,false,no_rag,No RAG,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-18T11:49:00Z,local/sessions/streamTest2/streamTest2_alias-code_explorative_no_rag_20260818_134856.json,,local/generated/20260818_134835_c7d48583/generated_visualization.py,,
+streamTest2__streamTest2_alias-code_explorative_rag_20260818_134530,streamTest2,blablador,alias-code,explorative,true,strategy_used,RAG: strategy used,true,false,2,0.5,3.0,2,false,true,true,1,true,2026-09-27T11:08:35Z,local/sessions/streamTest2/streamTest2_alias-code_explorative_rag_20260818_134530.json,local/sessions/streamTest2/streamTest2_alias-code_explorative_rag_20260818_134530_viewport.png,local/generated/20260818_134351_242f35ac/generated_visualization.py,"- laminar flow inside the grid
+- drop of streamlines at domain curve
+
+to few streamlines and only very sparsely seeded
+Domain is falsely shown to be rectangular","# Feature-aware seeding: Use magnitude-based seeding strategy from Record 2
+    # adapted for general 3D volume flow: seed points placed on a plane perpendicular
+    # to dominant flow direction, with segments to capture magnitude extrema
+    
+    # Calculate dominant flow direction by finding the direction with largest variance
+    # (simplified approach using the dataset's bounding box center and vector field)
+    
+    # Create seed points on a plane perpendicular to the dominant flow direction
+    # For structured grids with volume flow, use a plane at the dataset's center"
 streamTest2__streamTest2_alias-code_feature_aware_no_rag_20260818_153533,streamTest2,blablador,alias-code,feature aware,false,no_rag,No RAG,true,true,1,0.25,3.0,1,false,false,true,1,true,2026-08-18T13:35:37Z,local/sessions/streamTest2/streamTest2_alias-code_feature_aware_no_rag_20260818_153533.json,local/sessions/streamTest2/streamTest2_alias-code_feature_aware_no_rag_20260818_153533_viewport.png,local/generated/20260818_153425_7b61f7b8/generated_visualization.py,- laminar flow inside the grid,"# Create seed source - use a plane near the boundary in positive z-direction
     # Based on bounds: z range is [0.0, 5.724], so focus near top (positive z)
 
 to few streamlines"
-streamTest2__streamTest2_alias-code_feature_aware_rag_20260818_153340,streamTest2,blablador,alias-code,feature aware,true,unclear_failed,RAG: unclear / failed,false,false,0,0.0,0.0,3,false,false,false,2,true,2026-08-18T13:33:45Z,local/sessions/streamTest2/streamTest2_alias-code_feature_aware_rag_20260818_153340.json,,local/generated/20260818_153306_6deabf2e/generated_visualization.py,,
-streamTest2__streamTest2_gemini_gemini-3.7-flash_explorative_no_rag_20260817_134256,streamTest2,gemini,gemini/gemini-3.7-flash,explorative,false,no_rag,No RAG,true,true,3,0.75,7.0,1,false,true,true,1,true,2026-08-17T11:43:00Z,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_no_rag_20260817_134256.json,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_no_rag_20260817_134256_viewport.png,local/generated/20260817_134154_535b93bb/generated_visualization.py,"- laminar flow inside the grid
+streamTest2__streamTest2_alias-code_feature_aware_rag_20260818_153340,streamTest2,blablador,alias-code,feature aware,true,unclear_failed,RAG: unclear / failed,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-18T13:33:45Z,local/sessions/streamTest2/streamTest2_alias-code_feature_aware_rag_20260818_153340.json,,local/generated/20260818_153306_6deabf2e/generated_visualization.py,,
+streamTest2__streamTest2_gemini_gemini-3.7-flash_explorative_no_rag_20260817_134256,streamTest2,gemini,gemini/gemini-3.7-flash,explorative,false,no_rag,No RAG,true,true,3,0.75,7.0,1,false,false,true,1,true,2026-08-17T11:43:00Z,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_no_rag_20260817_134256.json,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_no_rag_20260817_134256_viewport.png,local/generated/20260817_134154_535b93bb/generated_visualization.py,"- laminar flow inside the grid
 - drop of streamlines at domain curve
 - turbulent flow at z-Border of Domain
 
 Domain is falsely shown to be rectangular",# Seeding Strategy: Dual cross-sectional stratified grid seeding (upstream inflow rake + mid-volume rake) with bidirectional integration
-streamTest2__streamTest2_gemini_gemini-3.7-flash_explorative_rag_20260817_133816,streamTest2,gemini,gemini/gemini-3.7-flash,explorative,true,strategy_ignored,RAG: strategy ignored,true,true,3,0.75,6.0,1,true,false,true,1,true,2026-08-17T11:38:20Z,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_rag_20260817_133816.json,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_rag_20260817_133816_viewport.png,local/generated/20260817_133624_cc16577b/generated_visualization.py,"- laminar flow inside the grid
+streamTest2__streamTest2_gemini_gemini-3.7-flash_explorative_rag_20260817_133816,streamTest2,gemini,gemini/gemini-3.7-flash,explorative,true,strategy_used,RAG: strategy used,true,true,2,0.5,4.0,1,true,true,true,1,true,2026-09-27T12:04:10Z,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_rag_20260817_133816.json,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_explorative_rag_20260817_133816_viewport.png,local/generated/20260927_140254_e2b8edc5/generated_visualization.py,"- laminar flow inside the grid
 - drop of streamlines at domain curve
-- colormap represents velocity
 
-Domain is falsely shown to be rectangular",adaptive inlet-plane seeding strategy with a regular grid of seed points
-streamTest2__streamTest2_gemini_gemini-3.7-flash_feature_aware_no_rag_20260818_153022,streamTest2,gemini,gemini/gemini-3.7-flash,feature aware,false,no_rag,No RAG,true,false,3,0.75,8.0,3,true,false,true,1,true,2026-08-18T13:30:25Z,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_feature_aware_no_rag_20260818_153022.json,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_feature_aware_no_rag_20260818_153022_viewport.png,local/generated/20260818_152942_3b9dca09/generated_visualization.py,"- turbulent flow at z-Border of Domain
+
+Domain is falsely shown to be rectangular","# 3. Seed generation
+    # Seeding strategy: Multi-Section Lattice Seeding across domain depth and cross-sections
+    seed_points = vtk.vtkPoints()
+
+    # Distribute seed planes across the primary flow axis to capture both entry and recirculating structures"
+streamTest2__streamTest2_gemini_gemini-3.7-flash_feature_aware_no_rag_20260818_153022,streamTest2,gemini,gemini/gemini-3.7-flash,feature aware,false,no_rag,No RAG,true,false,3,0.75,8.0,3,false,false,true,1,true,2026-08-18T13:30:25Z,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_feature_aware_no_rag_20260818_153022.json,local/sessions/streamTest2/streamTest2_gemini_gemini-3.7-flash_feature_aware_no_rag_20260818_153022_viewport.png,local/generated/20260818_152942_3b9dca09/generated_visualization.py,"- turbulent flow at z-Border of Domain
 - drop of streamlines at domain curve
 - laminar flow inside the grid","# Sample seed points directly from grid nodes to conform strictly to curved domain
 # 1. Global flow seeding (inflow and volume-wide distribution)"
@@ -633,7 +640,7 @@ streamTest2__streamTest2_gemini_gemini-3.7-flash_feature_aware_rag_20260818_1459
 - laminar flow inside the grid
 - colormap represents velocity","# 1. Global flow seeding: regular sparse sampling across the curved grid
 # 2. Target feature seeding: increased density in positive-z boundary region"
-streamTest2__streamTest2_openai_gpt-5.6-terra_explorative_no_rag_20260824_145952,streamTest2,openai,openai/gpt-5.6-terra,explorative,false,no_rag,No RAG,true,true,3,0.75,6.0,1,true,true,true,1,true,2026-08-24T12:59:57Z,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_explorative_no_rag_20260824_145952.json,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_explorative_no_rag_20260824_145952_viewport.png,local/generated/20260824_145903_d84ae37a/generated_visualization.py,"- laminar flow inside the grid
+streamTest2__streamTest2_openai_gpt-5.6-terra_explorative_no_rag_20260824_145952,streamTest2,openai,openai/gpt-5.6-terra,explorative,false,no_rag,No RAG,true,true,3,0.75,6.0,1,true,false,true,1,true,2026-08-24T12:59:57Z,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_explorative_no_rag_20260824_145952.json,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_explorative_no_rag_20260824_145952_viewport.png,local/generated/20260824_145903_d84ae37a/generated_visualization.py,"- laminar flow inside the grid
 - drop of streamlines at domain curve
 - colormap represents velocity
 
@@ -646,12 +653,12 @@ Domain is falsely shown to be rectangular","# Magnitude-ranked stratified volume
 
 Sparse seeding leads to not all features being recognizable"
 streamTest2__streamTest2_openai_gpt-5.6-terra_feature_aware_no_rag_20260818_144259,streamTest2,openai,openai/gpt-5.6-terra,feature aware,false,no_rag,No RAG,false,false,0,0.0,0.0,3,false,false,false,1,true,2026-08-18T12:43:03Z,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_feature_aware_no_rag_20260818_144259.json,,local/generated/20260818_144129_2c889350/generated_visualization.py,,
-streamTest2__streamTest2_openai_gpt-5.6-terra_feature_aware_rag_20260818_141840,streamTest2,openai,openai/gpt-5.6-terra,feature aware,true,strategy_used,RAG: strategy used,true,true,4,1.0,9.0,1,false,true,true,1,true,2026-08-18T12:18:45Z,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_feature_aware_rag_20260818_141840.json,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_feature_aware_rag_20260818_141840_viewport.png,local/generated/20260818_141732_930da55d/generated_visualization.py,"- turbulent flow at z-Border of Domain
+streamTest2__streamTest2_openai_gpt-5.6-terra_feature_aware_rag_20260818_141840,streamTest2,openai,openai/gpt-5.6-terra,feature aware,true,strategy_used,RAG: strategy used,true,true,4,1.0,9.0,1,true,true,true,1,true,2026-08-18T12:18:45Z,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_feature_aware_rag_20260818_141840.json,local/sessions/streamTest2/streamTest2_openai_gpt-5.6-terra_feature_aware_rag_20260818_141840_viewport.png,local/generated/20260818_141732_930da55d/generated_visualization.py,"- turbulent flow at z-Border of Domain
 - drop of streamlines at domain curve
 - laminar flow inside the grid
 - colormap represents velocity","# Practical approximation of feature-preserving cube seeding: use curved-grid interior cell centers instead of Cartesian seed positions.
     # Seeding strategy: feature-guided stratified interior cell-center seeding with denser positive-Z boundary coverage."
-tornado3d__tornado3d_anthropic_claude-opus-5_explorative_no_rag_20260818_154809,tornado3d,anthropic,anthropic/claude-opus-5,explorative,false,no_rag,No RAG,true,false,4,1.0,9.0,2,true,true,true,1,true,2026-08-18T13:48:12Z,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_explorative_no_rag_20260818_154809.json,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_explorative_no_rag_20260818_154809_viewport.png,local/generated/20260818_154719_f59f302d/generated_visualization.py,"- Show the whole tornado
+tornado3d__tornado3d_anthropic_claude-opus-5_explorative_no_rag_20260818_154809,tornado3d,anthropic,anthropic/claude-opus-5,explorative,false,no_rag,No RAG,true,false,4,1.0,9.0,2,true,false,true,1,true,2026-08-18T13:48:12Z,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_explorative_no_rag_20260818_154809.json,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_explorative_no_rag_20260818_154809_viewport.png,local/generated/20260818_154719_f59f302d/generated_visualization.py,"- Show the whole tornado
 - Good spacing across whole domain
 - Correctly calculate the vectors by multiplying with the respective unit vectors
 - Color by magnitude and choose colormap correctly","2. A coarse sampling of the field is used to compute a directional-dispersion field
@@ -670,7 +677,7 @@ tornado3d__tornado3d_anthropic_claude-opus-5_explorative_rag_20260818_154357,tor
   4. Remaining ""blank"" regions are filled with grid-based seeds (one per empty block of a
      4x4x4 block decomposition), matching the paper's grid-based filling stage.
   5. Short streamlines are discarded (length threshold), as in the paper."
-tornado3d__tornado3d_anthropic_claude-opus-5_feature_aware_no_rag_20260818_161911,tornado3d,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,4,1.0,9.0,1,true,true,true,1,true,2026-08-18T14:19:17Z,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_feature_aware_no_rag_20260818_161911.json,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_feature_aware_no_rag_20260818_161911_viewport.png,local/generated/20260818_161820_d7dafd22/generated_visualization.py,"- Show the whole tornado
+tornado3d__tornado3d_anthropic_claude-opus-5_feature_aware_no_rag_20260818_161911,tornado3d,anthropic,anthropic/claude-opus-5,feature aware,false,no_rag,No RAG,true,true,4,1.0,9.0,1,true,false,true,1,true,2026-08-18T14:19:17Z,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_feature_aware_no_rag_20260818_161911.json,local/sessions/tornado3d/tornado3d_anthropic_claude-opus-5_feature_aware_no_rag_20260818_161911_viewport.png,local/generated/20260818_161820_d7dafd22/generated_visualization.py,"- Show the whole tornado
 - Good spacing across whole domain
 - Correctly calculate the vectors by multiplying with the respective unit vectors
 - Color by magnitude and choose colormap correctly","""""""Volume filling coarse grid + concentric rings to capture the vortex core."""""""
@@ -735,7 +742,7 @@ tornado3d__tornado3d_gemini_gemini-3.7-flash_feature_aware_rag_20260818_163337,t
 - Good spacing across whole domain
 - Correctly calculate the vectors by multiplying with the respective unit vectors
 - Color by magnitude and choose colormap correctly",# 3. Seeding strategy: Multi-tier stratified radial and planar grid seeding across domain levels to capture vortex core and outer flow structure without visual clutter
-tornado3d__tornado3d_openai_gpt-5.6-terra_explorative_no_rag_20260818_155515,tornado3d,openai,openai/gpt-5.6-terra,explorative,false,no_rag,No RAG,true,false,2,0.5,5.0,2,true,true,true,1,true,2026-08-18T13:55:19Z,local/sessions/tornado3d/tornado3d_openai_gpt-5.6-terra_explorative_no_rag_20260818_155515.json,local/sessions/tornado3d/tornado3d_openai_gpt-5.6-terra_explorative_no_rag_20260818_155515_viewport.png,local/generated/20260818_155214_5946f8c3/generated_visualization.py,"- Correctly calculate the vectors by multiplying with the respective unit vectors
+tornado3d__tornado3d_openai_gpt-5.6-terra_explorative_no_rag_20260818_155515,tornado3d,openai,openai/gpt-5.6-terra,explorative,false,no_rag,No RAG,true,false,2,0.5,5.0,2,true,false,true,1,true,2026-08-18T13:55:19Z,local/sessions/tornado3d/tornado3d_openai_gpt-5.6-terra_explorative_no_rag_20260818_155515.json,local/sessions/tornado3d/tornado3d_openai_gpt-5.6-terra_explorative_no_rag_20260818_155515_viewport.png,local/generated/20260818_155214_5946f8c3/generated_visualization.py,"- Correctly calculate the vectors by multiplying with the respective unit vectors
 - Color by magnitude and choose colormap correctly","Annular planar seeding with a regular radial–circumferential distribution, positioned near the lower-z region of the domain."
 tornado3d__tornado3d_openai_gpt-5.6-terra_explorative_rag_20260818_160206,tornado3d,openai,openai/gpt-5.6-terra,explorative,true,strategy_ignored,RAG: strategy ignored,true,true,4,1.0,9.0,1,true,false,true,1,true,2026-08-18T14:02:11Z,local/sessions/tornado3d/tornado3d_openai_gpt-5.6-terra_explorative_rag_20260818_160206.json,local/sessions/tornado3d/tornado3d_openai_gpt-5.6-terra_explorative_rag_20260818_160206_viewport.png,local/generated/20260818_160104_e9f174e2/generated_visualization.py,"- Show the whole tornado
 - Good spacing across whole domain
